@@ -7,7 +7,14 @@ AI SDK Core **simplifies working with LLMs by offering a standardized way of int
 
 For example, here’s how you can generate text with various models using the AI SDK:
 
-<PreviewSwitchProviders />
+```ts
+import { generateText } from "ai";
+
+const { text } = await generateText({
+  model: "openai/gpt-5.2-chat",
+  prompt: "What is love?",
+});
+```
 
 ## AI SDK Core Functions
 
