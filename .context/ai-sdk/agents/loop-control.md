@@ -1,4 +1,3 @@
-
 # Loop Control
 
 You can control both the execution flow and the settings at each step of the agent loop. The loop continues until:

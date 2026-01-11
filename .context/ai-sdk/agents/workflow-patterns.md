@@ -1,4 +1,3 @@
-
 # Workflow Patterns
 
 Combine the building blocks from the [overview](/docs/agents/overview) with these patterns to add structure and reliability to your agents:
