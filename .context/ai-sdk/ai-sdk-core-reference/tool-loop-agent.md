@@ -5,23 +5,23 @@ Creates a reusable AI agent capable of generating text, streaming responses, and
 Unlike single-step calls like `generateText()`, an agent can iteratively invoke tools, collect tool results, and decide next actions until completion or user approval is required.
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
-  instructions: 'You are a helpful assistant.',
+  instructions: "You are a helpful assistant.",
   tools: {
     weather: weatherTool,
     calculator: calculatorTool,
   },
-});
+})
 
 const result = await agent.generate({
-  prompt: 'What is the weather in NYC?',
-});
+  prompt: "What is the weather in NYC?",
+})
 
-console.log(result.text);
+console.log(result.text)
 ```
 
 To see `ToolLoopAgent` in action, check out [these examples](#examples).
@@ -35,174 +35,174 @@ To see `ToolLoopAgent` in action, check out [these examples](#examples).
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'model',
-      type: 'LanguageModel',
-      isRequired: true,
-      description:
-        'The language model instance to use (e.g., from a provider).',
-    },
-    {
-      name: 'instructions',
-      type: 'string | SystemModelMessage | SystemModelMessage[]',
-      isOptional: true,
-      description:
-        'Instructions for the agent, usually used for system prompt/context.',
-    },
-    {
-      name: 'tools',
-      type: 'Record<string, Tool>',
-      isOptional: true,
-      description:
-        'A set of tools the agent can call. Keys are tool names. Tools require the underlying model to support tool calling.',
-    },
-    {
-      name: 'toolChoice',
-      type: 'ToolChoice',
-      isOptional: true,
-      description:
-        "Tool call selection strategy. Options: 'auto' | 'none' | 'required' | { type: 'tool', toolName: string }. Default: 'auto'.",
-    },
-    {
-      name: 'stopWhen',
-      type: 'StopCondition | StopCondition[]',
-      isOptional: true,
-      description:
-        'Condition(s) for ending the agent loop. Default: stepCountIs(20).',
-    },
-    {
-      name: 'activeTools',
-      type: 'Array<string>',
-      isOptional: true,
-      description:
-        'Limits the subset of tools that are available in a specific call.',
-    },
-    {
-      name: 'output',
-      type: 'Output',
-      isOptional: true,
-      description:
-        'Optional structured output specification, for parsing responses into typesafe data.',
-    },
-    {
-      name: 'prepareStep',
-      type: 'PrepareStepFunction',
-      isOptional: true,
-      description:
-        'Optional function to mutate step settings or inject state for each agent step.',
-    },
-    {
-      name: 'experimental_repairToolCall',
-      type: 'ToolCallRepairFunction',
-      isOptional: true,
-      description:
-        'Optional callback to attempt automatic recovery when a tool call cannot be parsed.',
-    },
-    {
-      name: 'onStepFinish',
-      type: 'GenerateTextOnStepFinishCallback',
-      isOptional: true,
-      description:
-        'Callback invoked after each agent step (LLM/tool call) completes.',
-    },
-    {
-      name: 'onFinish',
-      type: 'ToolLoopAgentOnFinishCallback',
-      isOptional: true,
-      description:
-        'Callback that is called when all agent steps are finished and the response is complete. Receives { steps, result, experimental_context }.',
-    },
-    {
-      name: 'experimental_context',
-      type: 'unknown',
-      isOptional: true,
-      description:
-        'Experimental: Custom context object passed to each tool call.',
-    },
-    {
-      name: 'experimental_telemetry',
-      type: 'TelemetrySettings',
-      isOptional: true,
-      description: 'Experimental: Optional telemetry configuration.',
-    },
-    {
-      name: 'experimental_download',
-      type: 'DownloadFunction | undefined',
-      isOptional: true,
-      description:
-        'Experimental: Custom download function for fetching files/URLs for tool or model use. By default, files are downloaded if the model does not support the URL for a given media type.',
-    },
-    {
-      name: 'maxOutputTokens',
-      type: 'number',
-      isOptional: true,
-      description: 'Maximum number of tokens the model is allowed to generate.',
-    },
-    {
-      name: 'temperature',
-      type: 'number',
-      isOptional: true,
-      description:
-        'Sampling temperature, controls randomness. Passed through to the model.',
-    },
-    {
-      name: 'topP',
-      type: 'number',
-      isOptional: true,
-      description:
-        'Top-p (nucleus) sampling parameter. Passed through to the model.',
-    },
-    {
-      name: 'topK',
-      type: 'number',
-      isOptional: true,
-      description: 'Top-k sampling parameter. Passed through to the model.',
-    },
-    {
-      name: 'presencePenalty',
-      type: 'number',
-      isOptional: true,
-      description: 'Presence penalty parameter. Passed through to the model.',
-    },
-    {
-      name: 'frequencyPenalty',
-      type: 'number',
-      isOptional: true,
-      description: 'Frequency penalty parameter. Passed through to the model.',
-    },
-    {
-      name: 'stopSequences',
-      type: 'string[]',
-      isOptional: true,
-      description:
-        'Custom token sequences which stop the model output. Passed through to the model.',
-    },
-    {
-      name: 'seed',
-      type: 'number',
-      isOptional: true,
-      description: 'Seed for deterministic generation (if supported).',
-    },
-    {
-      name: 'maxRetries',
-      type: 'number',
-      isOptional: true,
-      description: 'How many times to retry on failure. Default: 2.',
-    },
-    {
-      name: 'providerOptions',
-      type: 'ProviderOptions',
-      isOptional: true,
-      description: 'Additional provider-specific configuration.',
-    },
-    {
-      name: 'id',
-      type: 'string',
-      isOptional: true,
-      description: 'Custom agent identifier.',
-    },
-  ]}
+content={[
+{
+name: 'model',
+type: 'LanguageModel',
+isRequired: true,
+description:
+'The language model instance to use (e.g., from a provider).',
+},
+{
+name: 'instructions',
+type: 'string | SystemModelMessage | SystemModelMessage[]',
+isOptional: true,
+description:
+'Instructions for the agent, usually used for system prompt/context.',
+},
+{
+name: 'tools',
+type: 'Record<string, Tool>',
+isOptional: true,
+description:
+'A set of tools the agent can call. Keys are tool names. Tools require the underlying model to support tool calling.',
+},
+{
+name: 'toolChoice',
+type: 'ToolChoice',
+isOptional: true,
+description:
+"Tool call selection strategy. Options: 'auto' | 'none' | 'required' | { type: 'tool', toolName: string }. Default: 'auto'.",
+},
+{
+name: 'stopWhen',
+type: 'StopCondition | StopCondition[]',
+isOptional: true,
+description:
+'Condition(s) for ending the agent loop. Default: stepCountIs(20).',
+},
+{
+name: 'activeTools',
+type: 'Array<string>',
+isOptional: true,
+description:
+'Limits the subset of tools that are available in a specific call.',
+},
+{
+name: 'output',
+type: 'Output',
+isOptional: true,
+description:
+'Optional structured output specification, for parsing responses into typesafe data.',
+},
+{
+name: 'prepareStep',
+type: 'PrepareStepFunction',
+isOptional: true,
+description:
+'Optional function to mutate step settings or inject state for each agent step.',
+},
+{
+name: 'experimental_repairToolCall',
+type: 'ToolCallRepairFunction',
+isOptional: true,
+description:
+'Optional callback to attempt automatic recovery when a tool call cannot be parsed.',
+},
+{
+name: 'onStepFinish',
+type: 'GenerateTextOnStepFinishCallback',
+isOptional: true,
+description:
+'Callback invoked after each agent step (LLM/tool call) completes.',
+},
+{
+name: 'onFinish',
+type: 'ToolLoopAgentOnFinishCallback',
+isOptional: true,
+description:
+'Callback that is called when all agent steps are finished and the response is complete. Receives { steps, result, experimental_context }.',
+},
+{
+name: 'experimental_context',
+type: 'unknown',
+isOptional: true,
+description:
+'Experimental: Custom context object passed to each tool call.',
+},
+{
+name: 'experimental_telemetry',
+type: 'TelemetrySettings',
+isOptional: true,
+description: 'Experimental: Optional telemetry configuration.',
+},
+{
+name: 'experimental_download',
+type: 'DownloadFunction | undefined',
+isOptional: true,
+description:
+'Experimental: Custom download function for fetching files/URLs for tool or model use. By default, files are downloaded if the model does not support the URL for a given media type.',
+},
+{
+name: 'maxOutputTokens',
+type: 'number',
+isOptional: true,
+description: 'Maximum number of tokens the model is allowed to generate.',
+},
+{
+name: 'temperature',
+type: 'number',
+isOptional: true,
+description:
+'Sampling temperature, controls randomness. Passed through to the model.',
+},
+{
+name: 'topP',
+type: 'number',
+isOptional: true,
+description:
+'Top-p (nucleus) sampling parameter. Passed through to the model.',
+},
+{
+name: 'topK',
+type: 'number',
+isOptional: true,
+description: 'Top-k sampling parameter. Passed through to the model.',
+},
+{
+name: 'presencePenalty',
+type: 'number',
+isOptional: true,
+description: 'Presence penalty parameter. Passed through to the model.',
+},
+{
+name: 'frequencyPenalty',
+type: 'number',
+isOptional: true,
+description: 'Frequency penalty parameter. Passed through to the model.',
+},
+{
+name: 'stopSequences',
+type: 'string[]',
+isOptional: true,
+description:
+'Custom token sequences which stop the model output. Passed through to the model.',
+},
+{
+name: 'seed',
+type: 'number',
+isOptional: true,
+description: 'Seed for deterministic generation (if supported).',
+},
+{
+name: 'maxRetries',
+type: 'number',
+isOptional: true,
+description: 'How many times to retry on failure. Default: 2.',
+},
+{
+name: 'providerOptions',
+type: 'ProviderOptions',
+isOptional: true,
+description: 'Additional provider-specific configuration.',
+},
+{
+name: 'id',
+type: 'string',
+isOptional: true,
+description: 'Custom agent identifier.',
+},
+]}
 />
 
 ## Methods
@@ -213,37 +213,37 @@ Generates a response and triggers tool calls as needed, running the agent loop a
 
 ```ts
 const result = await agent.generate({
-  prompt: 'What is the weather like?',
-});
+  prompt: "What is the weather like?",
+})
 ```
 
 <PropertiesTable
-  content={[
-    {
-      name: 'prompt',
-      type: 'string | Array<ModelMessage>',
-      description: 'A text prompt or message array.',
-    },
-    {
-      name: 'messages',
-      type: 'Array<ModelMessage>',
-      description: 'A full conversation history as a list of model messages.',
-    },
-    {
-      name: 'abortSignal',
-      type: 'AbortSignal',
-      isOptional: true,
-      description:
-        'An optional abort signal that can be used to cancel the call.',
-    },
-    {
-      name: 'timeout',
-      type: 'number | { totalMs?: number }',
-      isOptional: true,
-      description:
-        'Timeout in milliseconds. Can be specified as a number or as an object with a totalMs property. The call will be aborted if it takes longer than the specified timeout. Can be used alongside abortSignal.',
-    },
-  ]}
+content={[
+{
+name: 'prompt',
+type: 'string | Array<ModelMessage>',
+description: 'A text prompt or message array.',
+},
+{
+name: 'messages',
+type: 'Array<ModelMessage>',
+description: 'A full conversation history as a list of model messages.',
+},
+{
+name: 'abortSignal',
+type: 'AbortSignal',
+isOptional: true,
+description:
+'An optional abort signal that can be used to cancel the call.',
+},
+{
+name: 'timeout',
+type: 'number | { totalMs?: number }',
+isOptional: true,
+description:
+'Timeout in milliseconds. Can be specified as a number or as an object with a totalMs property. The call will be aborted if it takes longer than the specified timeout. Can be used alongside abortSignal.',
+},
+]}
 />
 
 #### Returns
@@ -256,48 +256,48 @@ Streams a response from the agent, including agent reasoning and tool calls, as 
 
 ```ts
 const stream = agent.stream({
-  prompt: 'Tell me a story about a robot.',
-});
+  prompt: "Tell me a story about a robot.",
+})
 
 for await (const chunk of stream.textStream) {
-  console.log(chunk);
+  console.log(chunk)
 }
 ```
 
 <PropertiesTable
-  content={[
-    {
-      name: 'prompt',
-      type: 'string | Array<ModelMessage>',
-      description: 'A text prompt or message array.',
-    },
-    {
-      name: 'messages',
-      type: 'Array<ModelMessage>',
-      description: 'A full conversation history as a list of model messages.',
-    },
-    {
-      name: 'abortSignal',
-      type: 'AbortSignal',
-      isOptional: true,
-      description:
-        'An optional abort signal that can be used to cancel the call.',
-    },
-    {
-      name: 'timeout',
-      type: 'number | { totalMs?: number }',
-      isOptional: true,
-      description:
-        'Timeout in milliseconds. Can be specified as a number or as an object with a totalMs property. The call will be aborted if it takes longer than the specified timeout. Can be used alongside abortSignal.',
-    },
-    {
-      name: 'experimental_transform',
-      type: 'StreamTextTransform | Array<StreamTextTransform>',
-      isOptional: true,
-      description:
-        'Optional stream transformation(s). They are applied in the order provided and must maintain the stream structure. See `streamText` docs for details.',
-    },
-  ]}
+content={[
+{
+name: 'prompt',
+type: 'string | Array<ModelMessage>',
+description: 'A text prompt or message array.',
+},
+{
+name: 'messages',
+type: 'Array<ModelMessage>',
+description: 'A full conversation history as a list of model messages.',
+},
+{
+name: 'abortSignal',
+type: 'AbortSignal',
+isOptional: true,
+description:
+'An optional abort signal that can be used to cancel the call.',
+},
+{
+name: 'timeout',
+type: 'number | { totalMs?: number }',
+isOptional: true,
+description:
+'Timeout in milliseconds. Can be specified as a number or as an object with a totalMs property. The call will be aborted if it takes longer than the specified timeout. Can be used alongside abortSignal.',
+},
+{
+name: 'experimental_transform',
+type: 'StreamTextTransform | Array<StreamTextTransform>',
+isOptional: true,
+description:
+'Optional stream transformation(s). They are applied in the order provided and must maintain the stream structure. See `streamText` docs for details.',
+},
+]}
 />
 
 #### Returns
@@ -313,14 +313,14 @@ Infers the UI message type for the given agent instance. Useful for type-safe UI
 #### Basic Example
 
 ```ts
-import { ToolLoopAgent, InferAgentUIMessage } from 'ai';
+import { ToolLoopAgent, InferAgentUIMessage } from "ai"
 
 const weatherAgent = new ToolLoopAgent({
   model: __MODEL__,
   tools: { weather: weatherTool },
-});
+})
 
-type WeatherAgentUIMessage = InferAgentUIMessage<typeof weatherAgent>;
+type WeatherAgentUIMessage = InferAgentUIMessage<typeof weatherAgent>
 ```
 
 #### Example with Message Metadata
@@ -328,8 +328,8 @@ type WeatherAgentUIMessage = InferAgentUIMessage<typeof weatherAgent>;
 You can provide a second type argument to customize the metadata for each message. This is useful for tracking rich metadata returned by the agent (such as createdAt, tokens, finish reason, etc.).
 
 ```ts
-import { ToolLoopAgent, InferAgentUIMessage } from 'ai';
-import { z } from 'zod';
+import { ToolLoopAgent, InferAgentUIMessage } from "ai"
+import { z } from "zod"
 
 // Example schema for message metadata
 const exampleMetadataSchema = z.object({
@@ -337,20 +337,20 @@ const exampleMetadataSchema = z.object({
   model: z.string().optional(),
   totalTokens: z.number().optional(),
   finishReason: z.string().optional(),
-});
-type ExampleMetadata = z.infer<typeof exampleMetadataSchema>;
+})
+type ExampleMetadata = z.infer<typeof exampleMetadataSchema>
 
 // Define agent as usual
 const metadataAgent = new ToolLoopAgent({
   model: __MODEL__,
   // ...other options
-});
+})
 
 // Type-safe UI message type with custom metadata
 type MetadataAgentUIMessage = InferAgentUIMessage<
   typeof metadataAgent,
   ExampleMetadata
->;
+>
 ```
 
 ## Examples
@@ -358,25 +358,25 @@ type MetadataAgentUIMessage = InferAgentUIMessage<
 ### Basic Agent with Tools
 
 ```ts
-import { ToolLoopAgent, stepCountIs } from 'ai';
-import { weatherTool, calculatorTool } from './tools';
+import { ToolLoopAgent, stepCountIs } from "ai"
+import { weatherTool, calculatorTool } from "./tools"
 
 const assistant = new ToolLoopAgent({
   model: __MODEL__,
-  instructions: 'You are a helpful assistant.',
+  instructions: "You are a helpful assistant.",
   tools: {
     weather: weatherTool,
     calculator: calculatorTool,
   },
   stopWhen: stepCountIs(3),
-});
+})
 
 const result = await assistant.generate({
-  prompt: 'What is the weather in NYC and what is 100 * 25?',
-});
+  prompt: "What is the weather in NYC and what is 100 * 25?",
+})
 
-console.log(result.text);
-console.log(result.steps); // Array of all steps taken by the agent
+console.log(result.text)
+console.log(result.steps) // Array of all steps taken by the agent
 ```
 
 ### Streaming Agent Response
@@ -384,61 +384,61 @@ console.log(result.steps); // Array of all steps taken by the agent
 ```ts
 const agent = new ToolLoopAgent({
   model: __MODEL__,
-  instructions: 'You are a creative storyteller.',
-});
+  instructions: "You are a creative storyteller.",
+})
 
 const stream = agent.stream({
-  prompt: 'Tell me a short story about a time traveler.',
-});
+  prompt: "Tell me a short story about a time traveler.",
+})
 
 for await (const chunk of stream.textStream) {
-  process.stdout.write(chunk);
+  process.stdout.write(chunk)
 }
 ```
 
 ### Agent with Output Parsing
 
 ```ts
-import { z } from 'zod';
+import { z } from "zod"
 
 const analysisAgent = new ToolLoopAgent({
   model: __MODEL__,
   output: {
     schema: z.object({
-      sentiment: z.enum(['positive', 'negative', 'neutral']),
+      sentiment: z.enum(["positive", "negative", "neutral"]),
       score: z.number(),
       summary: z.string(),
     }),
   },
-});
+})
 
 const result = await analysisAgent.generate({
   prompt: 'Analyze this review: "The product exceeded my expectations!"',
-});
+})
 
-console.log(result.output);
+console.log(result.output)
 // Typed as { sentiment: 'positive' | 'negative' | 'neutral', score: number, summary: string }
 ```
 
 ### Example: Approved Tool Execution
 
 ```ts
-import { openai } from '@ai-sdk/openai';
-import { ToolLoopAgent } from 'ai';
+import { openai } from "@ai-sdk/openai"
+import { ToolLoopAgent } from "ai"
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
-  instructions: 'You are an agent with access to a weather API.',
+  instructions: "You are an agent with access to a weather API.",
   tools: {
     weather: openai.tools.weather({
       /* ... */
     }),
   },
   // Optionally require approval, etc.
-});
+})
 
 const result = await agent.generate({
-  prompt: 'Is it raining in Paris today?',
-});
-console.log(result.text);
+  prompt: "Is it raining in Paris today?",
+})
+console.log(result.text)
 ```

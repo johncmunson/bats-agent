@@ -20,9 +20,9 @@ You can then use the `experimental_telemetry` option to enable telemetry on spec
 ```ts highlight="4"
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Write a short story about a cat.',
+  prompt: "Write a short story about a cat.",
   experimental_telemetry: { isEnabled: true },
-});
+})
 ```
 
 When telemetry is enabled, you can also control if you want to record the input values and the output values for the function.
@@ -39,16 +39,16 @@ and `metadata` to include additional information in the telemetry data.
 ```ts highlight="6-10"
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Write a short story about a cat.',
+  prompt: "Write a short story about a cat.",
   experimental_telemetry: {
     isEnabled: true,
-    functionId: 'my-awesome-function',
+    functionId: "my-awesome-function",
     metadata: {
-      something: 'custom',
-      someOtherThing: 'other-value',
+      something: "custom",
+      someOtherThing: "other-value",
     },
   },
-});
+})
 ```
 
 ## Custom Tracer
@@ -57,15 +57,15 @@ You may provide a `tracer` which must return an OpenTelemetry `Tracer`. This is 
 you want your traces to use a `TracerProvider` other than the one provided by the `@opentelemetry/api` singleton.
 
 ```ts highlight="7"
-const tracerProvider = new NodeTracerProvider();
+const tracerProvider = new NodeTracerProvider()
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Write a short story about a cat.',
+  prompt: "Write a short story about a cat.",
   experimental_telemetry: {
     isEnabled: true,
-    tracer: tracerProvider.getTracer('ai'),
+    tracer: tracerProvider.getTracer("ai"),
   },
-});
+})
 ```
 
 ## Collected Data
@@ -76,7 +76,6 @@ const result = await generateText({
 
 - `ai.generateText` (span): the full length of the generateText call. It contains 1 or more `ai.generateText.doGenerate` spans.
   It contains the [basic LLM span information](#basic-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.generateText` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.generateText"`
   - `ai.prompt`: the prompt that was used when calling `generateText`
@@ -87,7 +86,6 @@ const result = await generateText({
 
 - `ai.generateText.doGenerate` (span): a provider doGenerate call. It can contain `ai.toolCall` spans.
   It contains the [call LLM span information](#call-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.generateText.doGenerate` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.generateText.doGenerate"`
   - `ai.prompt.messages`: the messages that were passed into the provider
@@ -108,7 +106,6 @@ const result = await generateText({
 
 - `ai.streamText` (span): the full length of the streamText call. It contains a `ai.streamText.doStream` span.
   It contains the [basic LLM span information](#basic-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.streamText` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.streamText"`
   - `ai.prompt`: the prompt that was used when calling `streamText`
@@ -120,7 +117,6 @@ const result = await generateText({
 - `ai.streamText.doStream` (span): a provider doStream call.
   This span contains an `ai.stream.firstChunk` event and `ai.toolCall` spans.
   It contains the [call LLM span information](#call-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.streamText.doStream` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.streamText.doStream"`
   - `ai.prompt.messages`: the messages that were passed into the provider
@@ -139,7 +135,6 @@ const result = await generateText({
 - `ai.toolCall` (span): a tool call that is made as part of the generateText call. See [Tool call spans](#tool-call-spans) for more details.
 
 - `ai.stream.firstChunk` (event): an event that is emitted when the first chunk of the stream is received.
-
   - `ai.response.msToFirstChunk`: the time it took to receive the first chunk
 
 - `ai.stream.finish` (event): an event that is emitted when the finish part of the LLM stream is received.
@@ -152,7 +147,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.generateObject` (span): the full length of the generateObject call. It contains 1 or more `ai.generateObject.doGenerate` spans.
   It contains the [basic LLM span information](#basic-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.generateObject` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.generateObject"`
   - `ai.prompt`: the prompt that was used when calling `generateObject`
@@ -164,7 +158,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.generateObject.doGenerate` (span): a provider doGenerate call.
   It contains the [call LLM span information](#call-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.generateObject.doGenerate` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.generateObject.doGenerate"`
   - `ai.prompt.messages`: the messages that were passed into the provider
@@ -177,7 +170,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.streamObject` (span): the full length of the streamObject call. It contains 1 or more `ai.streamObject.doStream` spans.
   It contains the [basic LLM span information](#basic-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.streamObject` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.streamObject"`
   - `ai.prompt`: the prompt that was used when calling `streamObject`
@@ -190,7 +182,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 - `ai.streamObject.doStream` (span): a provider doStream call.
   This span contains an `ai.stream.firstChunk` event.
   It contains the [call LLM span information](#call-llm-span-information) and the following attributes:
-
   - `operation.name`: `ai.streamObject.doStream` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.streamObject.doStream"`
   - `ai.prompt.messages`: the messages that were passed into the provider
@@ -207,7 +198,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.embed` (span): the full length of the embed call. It contains 1 `ai.embed.doEmbed` spans.
   It contains the [basic embedding span information](#basic-embedding-span-information) and the following attributes:
-
   - `operation.name`: `ai.embed` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.embed"`
   - `ai.value`: the value that was passed into the `embed` function
@@ -215,7 +205,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.embed.doEmbed` (span): a provider doEmbed call.
   It contains the [basic embedding span information](#basic-embedding-span-information) and the following attributes:
-
   - `operation.name`: `ai.embed.doEmbed` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.embed.doEmbed"`
   - `ai.values`: the values that were passed into the provider (array)
@@ -227,7 +216,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.embedMany` (span): the full length of the embedMany call. It contains 1 or more `ai.embedMany.doEmbed` spans.
   It contains the [basic embedding span information](#basic-embedding-span-information) and the following attributes:
-
   - `operation.name`: `ai.embedMany` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.embedMany"`
   - `ai.values`: the values that were passed into the `embedMany` function
@@ -235,7 +223,6 @@ It also records a `ai.stream.firstChunk` event when the first chunk of the strea
 
 - `ai.embedMany.doEmbed` (span): a provider doEmbed call.
   It contains the [basic embedding span information](#basic-embedding-span-information) and the following attributes:
-
   - `operation.name`: `ai.embedMany.doEmbed` and the functionId that was set through `telemetry.functionId`
   - `ai.operationId`: `"ai.embedMany.doEmbed"`
   - `ai.values`: the values that were sent to the provider

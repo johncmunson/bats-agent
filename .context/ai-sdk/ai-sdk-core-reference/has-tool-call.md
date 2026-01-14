@@ -5,8 +5,8 @@ Creates a stop condition that stops when a specific tool is called.
 This function is used with `stopWhen` in `generateText` and `streamText` to control when a tool-calling loop should stop based on whether a particular tool has been invoked.
 
 ```ts
-import { generateText, hasToolCall } from 'ai';
-__PROVIDER_IMPORT__;
+import { generateText, hasToolCall } from "ai"
+__PROVIDER_IMPORT__
 
 const result = await generateText({
   model: __MODEL__,
@@ -15,8 +15,8 @@ const result = await generateText({
     finalAnswer: finalAnswerTool,
   },
   // Stop when the finalAnswer tool is called
-  stopWhen: hasToolCall('finalAnswer'),
-});
+  stopWhen: hasToolCall("finalAnswer"),
+})
 ```
 
 ## Import
@@ -28,14 +28,14 @@ const result = await generateText({
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'toolName',
-      type: 'string',
-      description:
-        'The name of the tool that should trigger the stop condition when called.',
-    },
-  ]}
+content={[
+{
+name: 'toolName',
+type: 'string',
+description:
+'The name of the tool that should trigger the stop condition when called.',
+},
+]}
 />
 
 ### Returns
@@ -49,7 +49,7 @@ A `StopCondition` function that returns `true` when the specified tool is called
 Stop when a specific tool is called:
 
 ```ts
-import { generateText, hasToolCall } from 'ai';
+import { generateText, hasToolCall } from "ai"
 
 const result = await generateText({
   model: yourModel,
@@ -57,8 +57,8 @@ const result = await generateText({
     submitAnswer: submitAnswerTool,
     search: searchTool,
   },
-  stopWhen: hasToolCall('submitAnswer'),
-});
+  stopWhen: hasToolCall("submitAnswer"),
+})
 ```
 
 ### Combining with Other Conditions
@@ -66,7 +66,7 @@ const result = await generateText({
 You can combine multiple stop conditions in an array:
 
 ```ts
-import { generateText, hasToolCall, stepCountIs } from 'ai';
+import { generateText, hasToolCall, stepCountIs } from "ai"
 
 const result = await generateText({
   model: yourModel,
@@ -77,11 +77,11 @@ const result = await generateText({
   },
   // Stop when weather tool is called OR finalAnswer is called OR after 5 steps
   stopWhen: [
-    hasToolCall('weather'),
-    hasToolCall('finalAnswer'),
+    hasToolCall("weather"),
+    hasToolCall("finalAnswer"),
     stepCountIs(5),
   ],
-});
+})
 ```
 
 ### Agent Pattern
@@ -89,7 +89,7 @@ const result = await generateText({
 Common pattern for agents that run until they provide a final answer:
 
 ```ts
-import { generateText, hasToolCall } from 'ai';
+import { generateText, hasToolCall } from "ai"
 
 const result = await generateText({
   model: yourModel,
@@ -97,15 +97,15 @@ const result = await generateText({
     search: searchTool,
     calculate: calculateTool,
     finalAnswer: {
-      description: 'Provide the final answer to the user',
+      description: "Provide the final answer to the user",
       parameters: z.object({
         answer: z.string(),
       }),
       execute: async ({ answer }) => answer,
     },
   },
-  stopWhen: hasToolCall('finalAnswer'),
-});
+  stopWhen: hasToolCall("finalAnswer"),
+})
 ```
 
 ## See also

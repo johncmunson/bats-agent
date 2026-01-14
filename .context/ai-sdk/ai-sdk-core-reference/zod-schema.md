@@ -24,10 +24,10 @@ You can use it to [generate structured data](/docs/ai-sdk-core/generating-struct
 
 ```ts
 // ❌ Metadata will be lost - .min() returns a new instance without metadata
-z.string().meta({ describe: 'first name' }).min(1);
+z.string().meta({ describe: "first name" }).min(1)
 
 // ✅ Metadata is preserved - .meta() is the final method
-z.string().min(1).meta({ describe: 'first name' });
+z.string().min(1).meta({ describe: "first name" })
 ```
 
 </Note>
@@ -35,23 +35,23 @@ z.string().min(1).meta({ describe: 'first name' });
 ## Example with recursive schemas
 
 ```ts
-import { zodSchema } from 'ai';
-import { z } from 'zod';
+import { zodSchema } from "ai"
+import { z } from "zod"
 
 // Define a base category schema
 const baseCategorySchema = z.object({
   name: z.string(),
-});
+})
 
 // Define the recursive Category type
 type Category = z.infer<typeof baseCategorySchema> & {
-  subcategories: Category[];
-};
+  subcategories: Category[]
+}
 
 // Create the recursive schema using z.lazy
 const categorySchema: z.ZodType<Category> = baseCategorySchema.extend({
   subcategories: z.lazy(() => categorySchema.array()),
-});
+})
 
 // Create the final schema with useReferences enabled for recursive support
 const mySchema = zodSchema(
@@ -59,7 +59,7 @@ const mySchema = zodSchema(
     category: categorySchema,
   }),
   { useReferences: true },
-);
+)
 ```
 
 ## Import
@@ -71,32 +71,32 @@ const mySchema = zodSchema(
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'zodSchema',
-      type: 'z.Schema',
-      description: 'The Zod schema definition.',
-    },
-    {
-      name: 'options',
-      type: 'object',
-      description: 'Additional options for the schema conversion.',
-      properties: [
-        {
-          type: 'object',
-          parameters: [
-            {
-              name: 'useReferences',
-              isOptional: true,
-              type: 'boolean',
-              description:
-                'Enables support for references in the schema. This is required for recursive schemas, e.g. with `z.lazy`. However, not all language models and providers support such references. Defaults to `false`.',
-            },
-          ],
-        },
-      ],
-    },
-  ]}
+content={[
+{
+name: 'zodSchema',
+type: 'z.Schema',
+description: 'The Zod schema definition.',
+},
+{
+name: 'options',
+type: 'object',
+description: 'Additional options for the schema conversion.',
+properties: [
+{
+type: 'object',
+parameters: [
+{
+name: 'useReferences',
+isOptional: true,
+type: 'boolean',
+description:
+'Enables support for references in the schema. This is required for recursive schemas, e.g. with `z.lazy`. However, not all language models and providers support such references. Defaults to `false`.',
+},
+],
+},
+],
+},
+]}
 />
 
 ### Returns

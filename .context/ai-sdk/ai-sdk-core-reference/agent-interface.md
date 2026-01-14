@@ -7,11 +7,11 @@ Implementations of the `Agent` interface—such as `ToolLoopAgent`—fulfill the
 ## Interface Definition
 
 ```ts
-import { ModelMessage } from '@ai-sdk/provider-utils';
-import { ToolSet } from '../generate-text/tool-set';
-import { Output } from '../generate-text/output';
-import { GenerateTextResult } from '../generate-text/generate-text-result';
-import { StreamTextResult } from '../generate-text/stream-text-result';
+import { ModelMessage } from "@ai-sdk/provider-utils"
+import { ToolSet } from "../generate-text/tool-set"
+import { Output } from "../generate-text/output"
+import { GenerateTextResult } from "../generate-text/generate-text-result"
+import { StreamTextResult } from "../generate-text/stream-text-result"
 
 export type AgentCallParameters<CALL_OPTIONS> = ([CALL_OPTIONS] extends [never]
   ? { options?: never }
@@ -23,14 +23,14 @@ export type AgentCallParameters<CALL_OPTIONS> = ([CALL_OPTIONS] extends [never]
          *
          * You can either use `prompt` or `messages` but not both.
          */
-        prompt: string | Array<ModelMessage>;
+        prompt: string | Array<ModelMessage>
 
         /**
          * A list of messages.
          *
          * You can either use `prompt` or `messages` but not both.
          */
-        messages?: never;
+        messages?: never
       }
     | {
         /**
@@ -38,27 +38,27 @@ export type AgentCallParameters<CALL_OPTIONS> = ([CALL_OPTIONS] extends [never]
          *
          * You can either use `prompt` or `messages` but not both.
          */
-        messages: Array<ModelMessage>;
+        messages: Array<ModelMessage>
 
         /**
          * A prompt. It can be either a text prompt or a list of messages.
          *
          * You can either use `prompt` or `messages` but not both.
          */
-        prompt?: never;
+        prompt?: never
       }
   ) & {
     /**
      * Abort signal.
      */
-    abortSignal?: AbortSignal;
+    abortSignal?: AbortSignal
     /**
      * Timeout in milliseconds. Can be specified as a number or as an object with a totalMs property.
      * The call will be aborted if it takes longer than the specified timeout.
      * Can be used alongside abortSignal.
      */
-    timeout?: number | { totalMs?: number };
-  };
+    timeout?: number | { totalMs?: number }
+  }
 
 /**
  * An Agent receives a prompt (text or messages) and generates or streams an output
@@ -76,31 +76,31 @@ export interface Agent<
    * The specification version of the agent interface. This will enable
    * us to evolve the agent interface and retain backwards compatibility.
    */
-  readonly version: 'agent-v1';
+  readonly version: "agent-v1"
 
   /**
    * The id of the agent.
    */
-  readonly id: string | undefined;
+  readonly id: string | undefined
 
   /**
    * The tools that the agent can use.
    */
-  readonly tools: TOOLS;
+  readonly tools: TOOLS
 
   /**
    * Generates an output from the agent (non-streaming).
    */
   generate(
     options: AgentCallParameters<CALL_OPTIONS>,
-  ): PromiseLike<GenerateTextResult<TOOLS, OUTPUT>>;
+  ): PromiseLike<GenerateTextResult<TOOLS, OUTPUT>>
 
   /**
    * Streams an output from the agent (streaming).
    */
   stream(
     options: AgentCallParameters<CALL_OPTIONS>,
-  ): PromiseLike<StreamTextResult<TOOLS, OUTPUT>>;
+  ): PromiseLike<StreamTextResult<TOOLS, OUTPUT>>
 }
 ```
 
@@ -137,26 +137,26 @@ Both `generate()` and `stream()` accept an `AgentCallParameters<CALL_OPTIONS>` o
 Here's how you might implement your own Agent:
 
 ```ts
-import { Agent, GenerateTextResult, StreamTextResult } from 'ai';
-import type { ModelMessage } from '@ai-sdk/provider-utils';
+import { Agent, GenerateTextResult, StreamTextResult } from "ai"
+import type { ModelMessage } from "@ai-sdk/provider-utils"
 
 class MyEchoAgent implements Agent {
-  version = 'agent-v1' as const;
-  id = 'echo';
-  tools = {};
+  version = "agent-v1" as const
+  id = "echo"
+  tools = {}
 
   async generate({ prompt, messages, abortSignal }) {
-    const text = prompt ?? JSON.stringify(messages);
-    return { text, steps: [] };
+    const text = prompt ?? JSON.stringify(messages)
+    return { text, steps: [] }
   }
 
   async stream({ prompt, messages, abortSignal }) {
-    const text = prompt ?? JSON.stringify(messages);
+    const text = prompt ?? JSON.stringify(messages)
     return {
       textStream: (async function* () {
-        yield text;
+        yield text
       })(),
-    };
+    }
   }
 }
 ```

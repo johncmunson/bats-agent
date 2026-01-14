@@ -10,8 +10,8 @@ const result = await generateText({
   maxOutputTokens: 512,
   temperature: 0.3,
   maxRetries: 5,
-  prompt: 'Invent a new holiday and describe its traditions.',
-});
+  prompt: "Invent a new holiday and describe its traditions.",
+})
 ```
 
 <Note>
@@ -95,9 +95,9 @@ or to define a timeout using `AbortSignal.timeout`.
 ```ts
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Invent a new holiday and describe its traditions.',
+  prompt: "Invent a new holiday and describe its traditions.",
   abortSignal: AbortSignal.timeout(5000), // 5 seconds
-});
+})
 ```
 
 ### `timeout`
@@ -113,9 +113,9 @@ You can specify the timeout either as a number (milliseconds) or as an object wi
 ```ts
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Invent a new holiday and describe its traditions.',
+  prompt: "Invent a new holiday and describe its traditions.",
   timeout: 5000, // 5 seconds
-});
+})
 ```
 
 #### Example: 5 second timeout (object format)
@@ -123,9 +123,9 @@ const result = await generateText({
 ```ts
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Invent a new holiday and describe its traditions.',
+  prompt: "Invent a new holiday and describe its traditions.",
   timeout: { totalMs: 5000 }, // 5 seconds
-});
+})
 ```
 
 ### `headers`
@@ -137,16 +137,16 @@ depending on what the provider supports. For example, some observability provide
 headers such as `Prompt-Id`.
 
 ```ts
-import { generateText } from 'ai';
-__PROVIDER_IMPORT__;
+import { generateText } from "ai"
+__PROVIDER_IMPORT__
 
 const result = await generateText({
   model: __MODEL__,
-  prompt: 'Invent a new holiday and describe its traditions.',
+  prompt: "Invent a new holiday and describe its traditions.",
   headers: {
-    'Prompt-Id': 'my-prompt-id',
+    "Prompt-Id": "my-prompt-id",
   },
-});
+})
 ```
 
 <Note>

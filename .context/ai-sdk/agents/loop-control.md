@@ -20,8 +20,8 @@ When you provide `stopWhen`, the agent continues executing after tool calls unti
 The AI SDK provides several built-in stopping conditions:
 
 ```ts
-import { ToolLoopAgent, stepCountIs } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent, stepCountIs } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -29,11 +29,11 @@ const agent = new ToolLoopAgent({
     // your tools
   },
   stopWhen: stepCountIs(20), // Default state: stop after 20 steps maximum
-});
+})
 
 const result = await agent.generate({
-  prompt: 'Analyze this dataset and create a summary report',
-});
+  prompt: "Analyze this dataset and create a summary report",
+})
 ```
 
 ### Combine Multiple Conditions
@@ -41,8 +41,8 @@ const result = await agent.generate({
 Combine multiple stopping conditions. The loop stops when it meets any condition:
 
 ```ts
-import { ToolLoopAgent, stepCountIs, hasToolCall } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent, stepCountIs, hasToolCall } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -51,13 +51,13 @@ const agent = new ToolLoopAgent({
   },
   stopWhen: [
     stepCountIs(20), // Maximum 20 steps
-    hasToolCall('someTool'), // Stop after calling 'someTool'
+    hasToolCall("someTool"), // Stop after calling 'someTool'
   ],
-});
+})
 
 const result = await agent.generate({
-  prompt: 'Research and analyze the topic',
-});
+  prompt: "Research and analyze the topic",
+})
 ```
 
 ### Create Custom Conditions
@@ -65,27 +65,27 @@ const result = await agent.generate({
 Build custom stopping conditions for specific requirements:
 
 ```ts
-import { ToolLoopAgent, StopCondition, ToolSet } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent, StopCondition, ToolSet } from "ai"
+__PROVIDER_IMPORT__
 
 const tools = {
   // your tools
-} satisfies ToolSet;
+} satisfies ToolSet
 
 const hasAnswer: StopCondition<typeof tools> = ({ steps }) => {
   // Stop when the model generates text containing "ANSWER:"
-  return steps.some(step => step.text?.includes('ANSWER:')) ?? false;
-};
+  return steps.some((step) => step.text?.includes("ANSWER:")) ?? false
+}
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
   tools,
   stopWhen: hasAnswer,
-});
+})
 
 const result = await agent.generate({
   prompt: 'Find the answer and respond with "ANSWER: [your answer]"',
-});
+})
 ```
 
 Custom conditions receive step information across all steps:
@@ -98,12 +98,12 @@ const budgetExceeded: StopCondition<typeof tools> = ({ steps }) => {
       outputTokens: acc.outputTokens + (step.usage?.outputTokens ?? 0),
     }),
     { inputTokens: 0, outputTokens: 0 },
-  );
+  )
 
   const costEstimate =
-    (totalUsage.inputTokens * 0.01 + totalUsage.outputTokens * 0.03) / 1000;
-  return costEstimate > 0.5; // Stop if cost exceeds $0.50
-};
+    (totalUsage.inputTokens * 0.01 + totalUsage.outputTokens * 0.03) / 1000
+  return costEstimate > 0.5 // Stop if cost exceeds $0.50
+}
 ```
 
 ## Prepare Step
@@ -115,11 +115,11 @@ The `prepareStep` callback runs before each step in the loop and defaults to the
 Switch models based on step requirements:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
-  model: 'openai/gpt-4o-mini', // Default model
+  model: "openai/gpt-4o-mini", // Default model
   tools: {
     // your tools
   },
@@ -128,16 +128,16 @@ const agent = new ToolLoopAgent({
     if (stepNumber > 2 && messages.length > 10) {
       return {
         model: __MODEL__,
-      };
+      }
     }
     // Continue with default settings
-    return {};
+    return {}
   },
-});
+})
 
 const result = await agent.generate({
-  prompt: '...',
-});
+  prompt: "...",
+})
 ```
 
 ### Context Management
@@ -145,8 +145,8 @@ const result = await agent.generate({
 Manage growing conversation history in long-running loops:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -161,15 +161,15 @@ const agent = new ToolLoopAgent({
           messages[0], // Keep system instructions
           ...messages.slice(-10), // Keep last 10 messages
         ],
-      };
+      }
     }
-    return {};
+    return {}
   },
-});
+})
 
 const result = await agent.generate({
-  prompt: '...',
-});
+  prompt: "...",
+})
 ```
 
 ### Tool Selection
@@ -177,8 +177,8 @@ const result = await agent.generate({
 Control which tools are available at each step:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -191,29 +191,29 @@ const agent = new ToolLoopAgent({
     // Search phase (steps 0-2)
     if (stepNumber <= 2) {
       return {
-        activeTools: ['search'],
-        toolChoice: 'required',
-      };
+        activeTools: ["search"],
+        toolChoice: "required",
+      }
     }
 
     // Analysis phase (steps 3-5)
     if (stepNumber <= 5) {
       return {
-        activeTools: ['analyze'],
-      };
+        activeTools: ["analyze"],
+      }
     }
 
     // Summary phase (step 6+)
     return {
-      activeTools: ['summarize'],
-      toolChoice: 'required',
-    };
+      activeTools: ["summarize"],
+      toolChoice: "required",
+    }
   },
-});
+})
 
 const result = await agent.generate({
-  prompt: '...',
-});
+  prompt: "...",
+})
 ```
 
 You can also force a specific tool to be used:
@@ -223,19 +223,19 @@ prepareStep: async ({ stepNumber }) => {
   if (stepNumber === 0) {
     // Force the search tool to be used first
     return {
-      toolChoice: { type: 'tool', toolName: 'search' },
-    };
+      toolChoice: { type: "tool", toolName: "search" },
+    }
   }
 
   if (stepNumber === 5) {
     // Force the summarize tool after analysis
     return {
-      toolChoice: { type: 'tool', toolName: 'summarize' },
-    };
+      toolChoice: { type: "tool", toolName: "summarize" },
+    }
   }
 
-  return {};
-};
+  return {}
+}
 ```
 
 ### Message Modification
@@ -243,8 +243,8 @@ prepareStep: async ({ stepNumber }) => {
 Transform messages before sending them to the model:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -253,23 +253,23 @@ const agent = new ToolLoopAgent({
   },
   prepareStep: async ({ messages, stepNumber }) => {
     // Summarize tool results to reduce token usage
-    const processedMessages = messages.map(msg => {
-      if (msg.role === 'tool' && msg.content.length > 1000) {
+    const processedMessages = messages.map((msg) => {
+      if (msg.role === "tool" && msg.content.length > 1000) {
         return {
           ...msg,
           content: summarizeToolResult(msg.content),
-        };
+        }
       }
-      return msg;
-    });
+      return msg
+    })
 
-    return { messages: processedMessages };
+    return { messages: processedMessages }
   },
-});
+})
 
 const result = await agent.generate({
-  prompt: '...',
-});
+  prompt: "...",
+})
 ```
 
 ## Access Step Information
@@ -307,13 +307,13 @@ For scenarios requiring complete control over the agent loop, you can use AI SDK
 Build your own agent loop when you need full control over execution:
 
 ```ts
-import { generateText, ModelMessage } from 'ai';
-__PROVIDER_IMPORT__;
+import { generateText, ModelMessage } from "ai"
+__PROVIDER_IMPORT__
 
-const messages: ModelMessage[] = [{ role: 'user', content: '...' }];
+const messages: ModelMessage[] = [{ role: "user", content: "..." }]
 
-let step = 0;
-const maxSteps = 10;
+let step = 0
+const maxSteps = 10
 
 while (step < maxSteps) {
   const result = await generateText({
@@ -322,15 +322,15 @@ while (step < maxSteps) {
     tools: {
       // your tools here
     },
-  });
+  })
 
-  messages.push(...result.response.messages);
+  messages.push(...result.response.messages)
 
   if (result.text) {
-    break; // Stop when model generates text
+    break // Stop when model generates text
   }
 
-  step++;
+  step++
 }
 ```
 

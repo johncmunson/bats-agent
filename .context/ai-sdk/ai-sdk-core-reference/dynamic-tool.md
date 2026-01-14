@@ -10,22 +10,22 @@ The `dynamicTool` function creates tools where the input and output types are no
 Unlike the regular `tool` function, `dynamicTool` accepts and returns `unknown` types, allowing you to work with tools that have runtime-determined schemas.
 
 ```ts highlight={"1,4,9,10,11"}
-import { dynamicTool } from 'ai';
-import { z } from 'zod';
+import { dynamicTool } from "ai"
+import { z } from "zod"
 
 export const customTool = dynamicTool({
-  description: 'Execute a custom user-defined function',
+  description: "Execute a custom user-defined function",
   inputSchema: z.object({}),
   // input is typed as 'unknown'
-  execute: async input => {
-    const { action, parameters } = input as any;
+  execute: async (input) => {
+    const { action, parameters } = input as any
 
     // Execute your dynamic logic
     return {
       result: `Executed ${action} with ${JSON.stringify(parameters)}`,
-    };
+    }
   },
-});
+})
 ```
 
 ## Import
@@ -37,73 +37,73 @@ export const customTool = dynamicTool({
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'tool',
-      type: 'Object',
-      description: 'The dynamic tool definition.',
-      properties: [
-        {
-          type: 'Object',
-          parameters: [
-            {
-              name: 'description',
-              isOptional: true,
-              type: 'string',
-              description:
-                'Information about the purpose of the tool including details on how and when it can be used by the model.'
-            },
-            {
-              name: 'inputSchema',
-              type: 'FlexibleSchema<unknown>',
-              description:
-                'The schema of the input that the tool expects. While the type is unknown, a schema is still required for validation. You can use Zod schemas with z.unknown() or z.any() for fully dynamic inputs.'
-            },
-            {
-              name: 'execute',
-              type: 'ToolExecuteFunction<unknown, unknown>',
-              description:
-                'An async function that is called with the arguments from the tool call. The input is typed as unknown and must be validated/cast at runtime.',
-                properties: [
-                  {
-                    type: "ToolExecutionOptions",
-                    parameters: [
-                      {
-                      name: 'toolCallId',
-                      type: 'string',
-                      description: 'The ID of the tool call.',
-                    },
-                    {
-                        name: "messages",
-                        type: "ModelMessage[]",
-                        description: "Messages that were sent to the language model."
-                      },
-                      {
-                        name: "abortSignal",
-                        type: "AbortSignal",
-                        isOptional: true,
-                        description: "An optional abort signal."
-                      }
-                    ]
-                  }
-                ]
-            },
-            {
-              name: 'toModelOutput',
-              isOptional: true,
-              type: '({toolCallId: string; input: unknown; output: unknown}) => ToolResultOutput | PromiseLike<ToolResultOutput>',
-              description: 'Optional conversion function that maps the tool result to an output that can be used by the language model.'
-            },
-            {
-              name: 'providerOptions',
-              isOptional: true,
-              type: 'ProviderOptions',
-              description: 'Additional provider-specific metadata.'
-            }
-          ]
-        }
-      ]
-    }
+content={[
+{
+name: 'tool',
+type: 'Object',
+description: 'The dynamic tool definition.',
+properties: [
+{
+type: 'Object',
+parameters: [
+{
+name: 'description',
+isOptional: true,
+type: 'string',
+description:
+'Information about the purpose of the tool including details on how and when it can be used by the model.'
+},
+{
+name: 'inputSchema',
+type: 'FlexibleSchema<unknown>',
+description:
+'The schema of the input that the tool expects. While the type is unknown, a schema is still required for validation. You can use Zod schemas with z.unknown() or z.any() for fully dynamic inputs.'
+},
+{
+name: 'execute',
+type: 'ToolExecuteFunction<unknown, unknown>',
+description:
+'An async function that is called with the arguments from the tool call. The input is typed as unknown and must be validated/cast at runtime.',
+properties: [
+{
+type: "ToolExecutionOptions",
+parameters: [
+{
+name: 'toolCallId',
+type: 'string',
+description: 'The ID of the tool call.',
+},
+{
+name: "messages",
+type: "ModelMessage[]",
+description: "Messages that were sent to the language model."
+},
+{
+name: "abortSignal",
+type: "AbortSignal",
+isOptional: true,
+description: "An optional abort signal."
+}
+]
+}
+]
+},
+{
+name: 'toModelOutput',
+isOptional: true,
+type: '({toolCallId: string; input: unknown; output: unknown}) => ToolResultOutput | PromiseLike<ToolResultOutput>',
+description: 'Optional conversion function that maps the tool result to an output that can be used by the language model.'
+},
+{
+name: 'providerOptions',
+isOptional: true,
+type: 'ProviderOptions',
+description: 'Additional provider-specific metadata.'
+}
+]
+}
+]
+}
 
 ]}
 />
@@ -131,21 +131,21 @@ const result = await generateText({
     for (const toolCall of toolCalls) {
       if (toolCall.dynamic) {
         // Dynamic tool: input/output are 'unknown'
-        console.log('Dynamic tool:', toolCall.toolName);
-        console.log('Input:', toolCall.input);
-        continue;
+        console.log("Dynamic tool:", toolCall.toolName)
+        console.log("Input:", toolCall.input)
+        continue
       }
 
       // Static tools have full type inference
       switch (toolCall.toolName) {
-        case 'weather':
+        case "weather":
           // TypeScript knows the exact types
-          console.log(toolCall.input.location); // string
-          break;
+          console.log(toolCall.input.location) // string
+          break
       }
     }
   },
-});
+})
 ```
 
 ## Usage with `useChat`
@@ -154,17 +154,17 @@ When used with useChat (`UIMessage` format), dynamic tools appear as `dynamic-to
 
 ```tsx
 {
-  message.parts.map(part => {
+  message.parts.map((part) => {
     switch (part.type) {
-      case 'dynamic-tool':
+      case "dynamic-tool":
         return (
           <div>
             <h4>Tool: {part.toolName}</h4>
             <pre>{JSON.stringify(part.input, null, 2)}</pre>
           </div>
-        );
+        )
       // ... handle other part types
     }
-  });
+  })
 }
 ```

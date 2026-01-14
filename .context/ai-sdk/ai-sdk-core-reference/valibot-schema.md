@@ -10,8 +10,8 @@ in [tools](/docs/ai-sdk-core/tools-and-tool-calling).
 ## Example
 
 ```ts
-import { valibotSchema } from '@ai-sdk/valibot';
-import { object, string, array } from 'valibot';
+import { valibotSchema } from "@ai-sdk/valibot"
+import { object, string, array } from "valibot"
 
 const recipeSchema = valibotSchema(
   object({
@@ -24,7 +24,7 @@ const recipeSchema = valibotSchema(
     ),
     steps: array(string()),
   }),
-);
+)
 ```
 
 ## Import
@@ -36,13 +36,13 @@ const recipeSchema = valibotSchema(
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'valibotSchema',
-      type: 'GenericSchema<unknown, T>',
-      description: 'The Valibot schema definition.',
-    },
-  ]}
+content={[
+{
+name: 'valibotSchema',
+type: 'GenericSchema<unknown, T>',
+description: 'The Valibot schema definition.',
+},
+]}
 />
 
 ### Returns

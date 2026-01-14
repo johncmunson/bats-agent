@@ -44,10 +44,10 @@ Our empirical study systematically evaluates the relationship between overall re
 
 We summarize our contributions as follows:
 
-* We provide the first systematic study of budget-constrained tool-use agents by formalizing agent test-time scaling with explicit tool-call budgets and introducing a unified cost metric.
-* We introduce Budget Tracker, a light-weight, plug-in module compatible with any agent orchestration framework that enables effective budget-aware tool use.
-* We develop BATS, a budget-aware framework that dynamically adapts planning and verification strategies based on real-time resource tracking, flexibly switching between deepening a lead and branching to alternatives.
-* We conduct systematic experiments under varying budgets and unified costs with search agents, demonstrating that BATS is more cost-effective and yields more favorable scaling curves and better cost-performance trade-offs.
+- We provide the first systematic study of budget-constrained tool-use agents by formalizing agent test-time scaling with explicit tool-call budgets and introducing a unified cost metric.
+- We introduce Budget Tracker, a light-weight, plug-in module compatible with any agent orchestration framework that enables effective budget-aware tool use.
+- We develop BATS, a budget-aware framework that dynamically adapts planning and verification strategies based on real-time resource tracking, flexibly switching between deepening a lead and branching to alternatives.
+- We conduct systematic experiments under varying budgets and unified costs with search agents, demonstrating that BATS is more cost-effective and yields more favorable scaling curves and better cost-performance trade-offs.
 
 ## 2. Problem Formulation
 
@@ -62,6 +62,7 @@ $$
 $$
 
 subject to
+
 $$
 c_i(x;\pi) \le b_i \quad \text{for all } i = 1, \ldots, K, \text{ and every } x \in \mathcal{X}.
 $$
@@ -78,13 +79,13 @@ In our work, we instantiate the test-time scaling problem with a search agent, a
 
 A search agent is an LLM that answers an information-seeking question $x$ by retrieving external evidence and reasoning over it. The agent follows an iterative ReAct-style loop, alternating between internal thinking and external actions. The agent has access to two primary tools for interacting with the world:
 
-* **Search.** This tool helps perform a standard search engine query. Given a text query, it returns a list of search results, each including a title, a brief snippet, and a URL.
-* **Browse.** Given a specific URL, this tool scrapes the full content of the corresponding webpage, providing detailed information that is often unavailable in a search snippet.
+- **Search.** This tool helps perform a standard search engine query. Given a text query, it returns a list of search results, each including a title, a brief snippet, and a URL.
+- **Browse.** Given a specific URL, this tool scrapes the full content of the corresponding webpage, providing detailed information that is often unavailable in a search snippet.
 
 **Unified Cost Metric.** We model the agent’s total cost as the sum of consumed resources along two dimensions: tokens and tool calls. To create a unified metric, we map both to their corresponding economic costs.
 
-* **Token cost.** This represents the agent’s internal cognitive effort, including its reasoning, planning, and parametric knowledge processing. Token costs are calculated based on the pricing of the model provider, distinguishing among input, output, and cache hit tokens. In multi-round iterative frameworks, the output of iteration $i$ becomes part of the input for iteration $i+1$. Any overlap is a cache hit, thereby lowering the token consumption cost.
-* **Tool call cost.** This represents the agent’s active interaction with the external environment through information-seeking actions. Each invocation of an external service, such as a search query or a browsing request, incurs a cost determined by the pricing of the corresponding API or third-party provider.
+- **Token cost.** This represents the agent’s internal cognitive effort, including its reasoning, planning, and parametric knowledge processing. Token costs are calculated based on the pricing of the model provider, distinguishing among input, output, and cache hit tokens. In multi-round iterative frameworks, the output of iteration $i$ becomes part of the input for iteration $i+1$. Any overlap is a cache hit, thereby lowering the token consumption cost.
+- **Tool call cost.** This represents the agent’s active interaction with the external environment through information-seeking actions. Each invocation of an external service, such as a search query or a browsing request, incurs a cost determined by the pricing of the corresponding API or third-party provider.
 
 The total unified cost, $C_{\text{unified}}(x;\pi)$, for solving a given question $x$ under policy $\pi$ is the sum of the token cost and the tool call cost. Let $c_i(x;\pi)$ be the number of actual invocations to tool $t_i$ and $p_i$ be the economic cost per invocation of $t_i$. The unified cost metric is then defined as:
 
@@ -275,15 +276,15 @@ For scaling methods, we evaluate sequential and parallel scaling approaches appl
 
 We use Gemini-2.5-Flash, Gemini-2.5-Pro and Claude-Sonnet-4 as the backbone models in our framework. By default, we disable the thinking mode by setting the thinking budget as 0 for Gemini-2.5-Flash and 1024 for Gemini-2.5-Pro models. The maximum number of new tokens for generation was set to 65,536 for Gemini models and 64,000 for Claude. We use a temperature of 0.7 during agent execution to encourage exploration, and use a deterministic temperature of 0.0 for final answer selection and answer evaluation. We use the Google Custom Search JSON API for search tools, Jina.ai and Crawl4AI for web browsing.
 
-Table 3. Performance comparison across web search agents. We denote results from our own experiments with *; other baseline scores are cited from their respective publications. The “Training” column specifies whether the model has been specifically trained on agentic web search tasks. For our budget-constrained setting, each agent is provided a budget of 100 tool uses per tool.
+Table 3. Performance comparison across web search agents. We denote results from our own experiments with \*; other baseline scores are cited from their respective publications. The “Training” column specifies whether the model has been specifically trained on agentic web search tasks. For our budget-constrained setting, each agent is provided a budget of 100 tool uses per tool.
 
 | Method                       | Training | BrowseComp | BrowseComp-ZH | HLE-Search |
 | ---------------------------- | -------- | ---------- | ------------- | ---------- |
 | **Model Only**               |          |            |               |            |
 | GPT-4o                       | ✗        | 0.6        | 6.2           | -          |
 | Claude-3.7-Sonnet            | ✗        | 2.3        | 11.8          | -          |
-| Gemini-2.5-Flash*            | ✗        | 2.7        | 23.9          | 2.8        |
-| Gemini-2.5-Pro*              | ✗        | 6.3        | 27.8          | 8.6        |
+| Gemini-2.5-Flash\*           | ✗        | 2.7        | 23.9          | 2.8        |
+| Gemini-2.5-Pro\*             | ✗        | 6.3        | 27.8          | 8.6        |
 | OpenAI o1                    | ✗        | 9.9        | 29.1          | -          |
 | **Training-based Agents**    |          |            |               |            |
 | ASearcher                    | ✓        | 5.2        | 15.6          | -          |
@@ -506,9 +507,7 @@ You have access to 2 tools: search and browse.
         "description": "Array of query strings. Include multiple complementary search queries in a single call."
       }
     },
-    "required": [
-      "query"
-    ]
+    "required": ["query"]
   }
 }
 ```
@@ -530,10 +529,7 @@ You have access to 2 tools: search and browse.
         "description": "The specific information goal for browsing webpage(s)."
       }
     },
-    "required": [
-      "url",
-      "goal"
-    ]
+    "required": ["url", "goal"]
   }
 }
 ```
@@ -544,8 +540,8 @@ You should start with one or more cycles of (thinking about which tool to use ->
 
 You have two independent budgets:
 
-* Query Budget (for search)
-* URL Budget (for browse)
+- Query Budget (for search)
+- URL Budget (for browse)
 
 Each string in `query` or `url` consumes 1 unit respectively.
 
@@ -553,27 +549,27 @@ After each `<tool_response>`, a `<budget>` tag shows remaining units. You must A
 
 ### HIGH Budget (>=70% remaining)
 
-* Search: 3–5 diverse queries in one batch.
-* Browse: up to 2–3 high-value URLs.
-* Goal: Broad exploration, build context fast.
+- Search: 3–5 diverse queries in one batch.
+- Browse: up to 2–3 high-value URLs.
+- Goal: Broad exploration, build context fast.
 
 ### MEDIUM Budget (30%–70%)
 
-* Search: 2–3 precise, refined queries per cycle.
-* Browse: 1–2 URLs that close key knowledge gaps.
-* Goal: Converge; eliminate uncertainty efficiently.
+- Search: 2–3 precise, refined queries per cycle.
+- Browse: 1–2 URLs that close key knowledge gaps.
+- Goal: Converge; eliminate uncertainty efficiently.
 
 ### LOW Budget (10%–30%)
 
-* Search: 1 tightly focused query.
-* Browse: at most 1 most promising URL.
-* Goal: Verify a single critical fact or finalize answer.
+- Search: 1 tightly focused query.
+- Browse: at most 1 most promising URL.
+- Goal: Verify a single critical fact or finalize answer.
 
 ### CRITICAL (<10% remaining or 0 in one budget)
 
-* Avoid using the depleted tool.
-* Only perform 1 minimal-cost query or browse if absolutely essential.
-* If uncertainty remains and no tool use is possible, output `<answer>None</answer>`.
+- Avoid using the depleted tool.
+- Only perform 1 minimal-cost query or browse if absolutely essential.
+- If uncertainty remains and no tool use is possible, output `<answer>None</answer>`.
 
 ## Step syntax
 
@@ -597,9 +593,9 @@ Repeat <think><tool_code> until you have the final answer. <answer>Final solutio
 
 ## About Answers
 
-* Only wirte the final answer inside <answer> and </answer>.
-* If you cannot find the answer, write <answer>None</answer>.
-</prompt>
+- Only wirte the final answer inside <answer> and </answer>.
+- If you cannot find the answer, write <answer>None</answer>.
+  </prompt>
 
 ### C.2. BATS Planning Module
 
@@ -608,8 +604,8 @@ Repeat <think><tool_code> until you have the final answer. <answer>Final solutio
 
 Questions contain two types of constraints: exploration and verification.
 
-* **Exploration:** Broad, core requirements (e.g., birthday, profession). Use these for initial searches to surface candidates. You may combine 1–2 to form stronger queries.
-* **Verification:** Narrow, specific details. Apply these only after you have candidates, to confirm or filter them. Never begin with verification constraints.
+- **Exploration:** Broad, core requirements (e.g., birthday, profession). Use these for initial searches to surface candidates. You may combine 1–2 to form stronger queries.
+- **Verification:** Narrow, specific details. Apply these only after you have candidates, to confirm or filter them. Never begin with verification constraints.
 
 Start with exploration queries, then use verification to validate the results.
 
@@ -623,7 +619,7 @@ Maintain a tree-structured checklist of actionable steps (each may require sever
 - Keep all executed steps, never delete them, retain history to avoid repeats.
 - Update dynamically as you reason and gather info, adding or revising steps as needed.
 - Always consider current and remaining budget when updating the plan.
-</prompt>
+  </prompt>
 
 ### C.3. BATS Self-Verification Module
 
@@ -632,10 +628,10 @@ You are an AI Strategic Verifier. Your primary goal is to evaluate a proposed an
 
 ### Given Inputs
 
-* **Question**: The original user question. An answer is believed to exist.
-* **Trajectory**: The sequence of reasoning steps and tool calls taken so far in the current attempt.
-* **Current Answer**: The final answer produced by the current attempt.
-* **Budget Status**: Information on current tool call budget utilization and remaining budget, including search queries and browsing URLs.
+- **Question**: The original user question. An answer is believed to exist.
+- **Trajectory**: The sequence of reasoning steps and tool calls taken so far in the current attempt.
+- **Current Answer**: The final answer produced by the current attempt.
+- **Budget Status**: Information on current tool call budget utilization and remaining budget, including search queries and browsing URLs.
 
 ### Your Task: A 3-Step Process
 
@@ -645,9 +641,9 @@ You must proceed in the following order:
 
 First, perform a strict verification of the `Current Answer`.
 
-* Go through each constraint from the original `Question` one by one.
-* For each constraint, compare it against the `Current Answer` and the `Trajectory`.
-* State your finding for each constraint: `satisfied`, `contradicted`, or `unverifiable`.
+- Go through each constraint from the original `Question` one by one.
+- For each constraint, compare it against the `Current Answer` and the `Trajectory`.
+- State your finding for each constraint: `satisfied`, `contradicted`, or `unverifiable`.
 
 #### Step 2: Make a Strategic Decision
 
@@ -655,12 +651,12 @@ Based on your verification and the budget, make one of three decisions:
 
 1. SUCCESS: If the verification in Step 1 passed (all constraints are satisfied). The task is complete.
 2. CONTINUE: If the verification failed because a few constraints are unverifiable, but the overall plan is still sound and salvageable. This is the choice if **both** of these conditions are true:
-   * Promising Path: The `Trajectory` is generally sound, and the failure was due to a correctable error.
-   * Sufficient Budget: There is enough `Remaining Budget `to attempt a correction on this path.
+   - Promising Path: The `Trajectory` is generally sound, and the failure was due to a correctable error.
+   - Sufficient Budget: There is enough `Remaining Budget `to attempt a correction on this path.
 3. PIVOT: If the verification failed, signal to abandon the current plan and switch to another one. You should pivot if any of these conditions are true:
-   * Dead End: The `Trajectory` reveals a fundamental flaw in the current plan’s logic that cannot be easily fixed.
-   * Failed Tool Calls: The `Trajectory` shows repeated, unsuccessful attempts to find certain info.
-   * Insufficient Budget: The `Remaining Budget` is too low to make another meaningful attempt or correction within the current plan.
+   - Dead End: The `Trajectory` reveals a fundamental flaw in the current plan’s logic that cannot be easily fixed.
+   - Failed Tool Calls: The `Trajectory` shows repeated, unsuccessful attempts to find certain info.
+   - Insufficient Budget: The `Remaining Budget` is too low to make another meaningful attempt or correction within the current plan.
 
 #### Step 3: Summarize for the Next Step
 
@@ -670,13 +666,13 @@ You need to first provide a **trajectory summary**: summarize the agent’s reas
 
 Then, provide additional details tailored to your decision in Step 2.
 
-* If the decision is **SUCCESS**:
-  * No further detail needed.
+- If the decision is **SUCCESS**:
+  - No further detail needed.
 
-* If the decision is **CONTINUE / PIVOT**:
-  * Failure Analysis: Diagnose the root cause of the failure. Identify the critical flaw (e.g., poor query design, flawed logic, misinterpreted evidence) and name the general failure pattern to prevent its recurrence.
-  * Useful Information: Any useful intermediate findings or results from the current `Trajectory` that could be valuable inputs for the next attempt. This prevents redundant work.
-  * Strategic Recommendations: Provide actionable advice for the agent’s next attempt. Suggest strategic pivots, new angles of investigation, or different ways to combine the problem’s constraints. Explicitly state if it should backtrack to and resume from a specific step in the previous plan to avoid re-doing work.
+- If the decision is **CONTINUE / PIVOT**:
+  - Failure Analysis: Diagnose the root cause of the failure. Identify the critical flaw (e.g., poor query design, flawed logic, misinterpreted evidence) and name the general failure pattern to prevent its recurrence.
+  - Useful Information: Any useful intermediate findings or results from the current `Trajectory` that could be valuable inputs for the next attempt. This prevents redundant work.
+  - Strategic Recommendations: Provide actionable advice for the agent’s next attempt. Suggest strategic pivots, new angles of investigation, or different ways to combine the problem’s constraints. Explicitly state if it should backtrack to and resume from a specific step in the previous plan to avoid re-doing work.
 
 ### Output Requirement
 
@@ -691,6 +687,7 @@ Your final output must be a single JSON object with the following structure. Do 
   "details": "A JSON object containing the additional details required by Step 3. For a SUCCESS decision, this can be an empty object {}."
 }
 ```
+
 </prompt>
 
 ### C.4. BATS Answer Selection
@@ -744,13 +741,13 @@ We demonstrate how Budget Tracker enables the agent to dynamically adapt its beh
 ```
 High Budget
 
-Question  
+Question
 What is the full name of a person known for investing in technology businesses? [Other constraints]...
 
-ReAct [Wrong answer]  
+ReAct [Wrong answer]
 The most unique and searchable clue is the blog post titled "Mxx" about a trip to Rxx. This is a very specific combination of terms. I will start by searching for this.
 
-ReAct + Budget Tracker [Correct answer]  
+ReAct + Budget Tracker [Correct answer]
 My strategy will be to start with the most specific clue: the blog post. I will combine it with other keywords to narrow down the results. I have a high budget, so I can use multiple queries to explore different angles simultaneously.
 ```
 
@@ -759,13 +756,13 @@ Figure 15. Adaption to high budget constraints. Being aware of the high budget, 
 ```
 Low Budget
 
-Question  
+Question
 In what year did the event occur that led to the loss of lives [Other constraints]...
 
-ReAct [Wrong answer]  
+ReAct [Wrong answer]
 This requires a multi-pronged search. I will look for famous monuments in each city and then check their details... At this point, I have exhausted the direct search for a monument that fits all criteria.
 
-ReAct + Budget Tracker [Correct answer]  
+ReAct + Budget Tracker [Correct answer]
 This is too many queries. I will try to be more efficient. [performs search] I have a low query budget, so this must be precise.
 ```
 
@@ -780,16 +777,16 @@ In Figure 17, we demonstrate how self-verification module makes budget aware dec
 **More resource constraints.** While our study presents the first empirical analysis of tool-call budgets, a more realistic and challenging scenario involves managing multiple resource constraints jointly. Examples include token limits, inference latency, and tool-call budgets. Understanding and controlling agent behavior under multi-dimensional constraints is important for deploying scalable systems in real environments.
 
 ```
-Question  
+Question
 There is a person ... What date was ...
 
 Verification Decision: PIVOT
 
-Justification:  
+Justification:
 The agent concluded it had exhausted all logical paths, but this is incorrect. The core problem remains unsolved, and since significant budget remains, a focused pivot back to the original, most logical strategy is required.
 
-Recommendation:  
-The next attempt must pivot back to the original, most logical strategy and execute it with more rigor: xxx  
+Recommendation:
+The next attempt must pivot back to the original, most logical strategy and execute it with more rigor: xxx
 This is the key that unlocks the puzzle. Do not deviate to other strategies until this one is exhausted.
 ```
 

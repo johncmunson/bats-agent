@@ -10,33 +10,33 @@ wrapping existing providers and adding additional functionality.
 You can create a custom provider using `customProvider`.
 
 ```ts
-import { openai } from '@ai-sdk/openai';
-import { customProvider } from 'ai';
+import { openai } from "@ai-sdk/openai"
+import { customProvider } from "ai"
 
 // custom provider with different model settings:
 export const myOpenAI = customProvider({
   languageModels: {
     // replacement model with custom settings:
-    'gpt-4': wrapLanguageModel({
-      model: openai('gpt-4'),
+    "gpt-4": wrapLanguageModel({
+      model: openai("gpt-4"),
       middleware: defaultSettingsMiddleware({
         settings: {
           providerOptions: {
             openai: {
-              reasoningEffort: 'high',
+              reasoningEffort: "high",
             },
           },
         },
       }),
     }),
     // alias model with custom settings:
-    'gpt-4o-reasoning-high': wrapLanguageModel({
-      model: openai('gpt-4o'),
+    "gpt-4o-reasoning-high": wrapLanguageModel({
+      model: openai("gpt-4o"),
       middleware: defaultSettingsMiddleware({
         settings: {
           providerOptions: {
             openai: {
-              reasoningEffort: 'high',
+              reasoningEffort: "high",
             },
           },
         },
@@ -44,7 +44,7 @@ export const myOpenAI = customProvider({
     }),
   },
   fallbackProvider: openai,
-});
+})
 ```
 
 ## Import
@@ -56,36 +56,36 @@ export const myOpenAI = customProvider({
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'languageModels',
-      type: 'Record<string, LanguageModel>',
-      isOptional: true,
-      description:
-        'A record of language models, where keys are model IDs and values are LanguageModel instances.',
-    },
-    {
-      name: '.embeddingModels',
-      type: 'Record<string, EmbeddingModel<string>>',
-      isOptional: true,
-      description:
-        'A record of text embedding models, where keys are model IDs and values are EmbeddingModel<string> instances.',
-    },
-    {
-      name: 'imageModels',
-      type: 'Record<string, ImageModel>',
-      isOptional: true,
-      description:
-        'A record of image models, where keys are model IDs and values are image model instances.',
-    },
-    {
-      name: 'fallbackProvider',
-      type: 'Provider',
-      isOptional: true,
-      description:
-        'An optional fallback provider to use when a requested model is not found in the custom provider.',
-    },
-  ]}
+content={[
+{
+name: 'languageModels',
+type: 'Record<string, LanguageModel>',
+isOptional: true,
+description:
+'A record of language models, where keys are model IDs and values are LanguageModel instances.',
+},
+{
+name: '.embeddingModels',
+type: 'Record<string, EmbeddingModel<string>>',
+isOptional: true,
+description:
+'A record of text embedding models, where keys are model IDs and values are EmbeddingModel<string> instances.',
+},
+{
+name: 'imageModels',
+type: 'Record<string, ImageModel>',
+isOptional: true,
+description:
+'A record of image models, where keys are model IDs and values are image model instances.',
+},
+{
+name: 'fallbackProvider',
+type: 'Provider',
+isOptional: true,
+description:
+'An optional fallback provider to use when a requested model is not found in the custom provider.',
+},
+]}
 />
 
 ### Returns
@@ -93,24 +93,24 @@ export const myOpenAI = customProvider({
 The `customProvider` function returns a `Provider` instance. It has the following methods:
 
 <PropertiesTable
-  content={[
-    {
-      name: 'languageModel',
-      type: '(id: string) => LanguageModel',
-      description:
-        'A function that returns a language model by its id (format: providerId:modelId)',
-    },
-    {
-      name: 'embeddingModel',
-      type: '(id: string) => EmbeddingModel<string>',
-      description:
-        'A function that returns a text embedding model by its id (format: providerId:modelId)',
-    },
-    {
-      name: 'imageModel',
-      type: '(id: string) => ImageModel',
-      description:
-        'A function that returns an image model by its id (format: providerId:modelId)',
-    },
-  ]}
+content={[
+{
+name: 'languageModel',
+type: '(id: string) => LanguageModel',
+description:
+'A function that returns a language model by its id (format: providerId:modelId)',
+},
+{
+name: 'embeddingModel',
+type: '(id: string) => EmbeddingModel<string>',
+description:
+'A function that returns a text embedding model by its id (format: providerId:modelId)',
+},
+{
+name: 'imageModel',
+type: '(id: string) => ImageModel',
+description:
+'A function that returns an image model by its id (format: providerId:modelId)',
+},
+]}
 />

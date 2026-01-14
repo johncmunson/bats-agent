@@ -1,13 +1,13 @@
-import { generateText } from '../generate-text/generate-text';
-import { GenerateTextResult } from '../generate-text/generate-text-result';
-import { Output } from '../generate-text/output';
-import { stepCountIs } from '../generate-text/stop-condition';
-import { streamText } from '../generate-text/stream-text';
-import { StreamTextResult } from '../generate-text/stream-text-result';
-import { ToolSet } from '../generate-text/tool-set';
-import { Prompt } from '../prompt';
-import { Agent, AgentCallParameters, AgentStreamParameters } from './agent';
-import { ToolLoopAgentSettings } from './tool-loop-agent-settings';
+import { generateText } from "../generate-text/generate-text"
+import { GenerateTextResult } from "../generate-text/generate-text-result"
+import { Output } from "../generate-text/output"
+import { stepCountIs } from "../generate-text/stop-condition"
+import { streamText } from "../generate-text/stream-text"
+import { StreamTextResult } from "../generate-text/stream-text-result"
+import { ToolSet } from "../generate-text/tool-set"
+import { Prompt } from "../prompt"
+import { Agent, AgentCallParameters, AgentStreamParameters } from "./agent"
+import { ToolLoopAgentSettings } from "./tool-loop-agent-settings"
 
 /**
  * A tool loop agent is an agent that runs tools in a loop. In each step,
@@ -24,28 +24,27 @@ export class ToolLoopAgent<
   CALL_OPTIONS = never,
   TOOLS extends ToolSet = {},
   OUTPUT extends Output = never,
-> implements Agent<CALL_OPTIONS, TOOLS, OUTPUT>
-{
-  readonly version = 'agent-v1';
+> implements Agent<CALL_OPTIONS, TOOLS, OUTPUT> {
+  readonly version = "agent-v1"
 
-  private readonly settings: ToolLoopAgentSettings<CALL_OPTIONS, TOOLS, OUTPUT>;
+  private readonly settings: ToolLoopAgentSettings<CALL_OPTIONS, TOOLS, OUTPUT>
 
   constructor(settings: ToolLoopAgentSettings<CALL_OPTIONS, TOOLS, OUTPUT>) {
-    this.settings = settings;
+    this.settings = settings
   }
 
   /**
    * The id of the agent.
    */
   get id(): string | undefined {
-    return this.settings.id;
+    return this.settings.id
   }
 
   /**
    * The tools that the agent can use.
    */
   get tools(): TOOLS {
-    return this.settings.tools as TOOLS;
+    return this.settings.tools as TOOLS
   }
 
   private async prepareCall(
@@ -53,7 +52,7 @@ export class ToolLoopAgent<
   ): Promise<
     Omit<
       ToolLoopAgentSettings<CALL_OPTIONS, TOOLS, OUTPUT>,
-      'prepareCall' | 'instructions'
+      "prepareCall" | "instructions"
     > &
       Prompt
   > {
@@ -61,19 +60,19 @@ export class ToolLoopAgent<
       ...this.settings,
       stopWhen: this.settings.stopWhen ?? stepCountIs(20),
       ...options,
-    };
+    }
 
     const preparedCallArgs =
-      (await this.settings.prepareCall?.(baseCallArgs)) ?? baseCallArgs;
+      (await this.settings.prepareCall?.(baseCallArgs)) ?? baseCallArgs
 
-    const { instructions, messages, prompt, ...callArgs } = preparedCallArgs;
+    const { instructions, messages, prompt, ...callArgs } = preparedCallArgs
 
     return {
       ...callArgs,
 
       // restore prompt types
       ...({ system: instructions, messages, prompt } as Prompt),
-    };
+    }
   }
 
   /**
@@ -90,7 +89,7 @@ export class ToolLoopAgent<
       ...(await this.prepareCall(options)),
       abortSignal,
       timeout,
-    });
+    })
   }
 
   /**
@@ -109,6 +108,6 @@ export class ToolLoopAgent<
       abortSignal,
       timeout,
       experimental_transform,
-    });
+    })
   }
 }

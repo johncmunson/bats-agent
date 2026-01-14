@@ -3,9 +3,9 @@
 The `Output` object provides output specifications for structured data generation with [`generateText`](/docs/reference/ai-sdk-core/generate-text) and [`streamText`](/docs/reference/ai-sdk-core/stream-text). It allows you to specify the expected shape of the generated data and handles validation automatically.
 
 ```ts
-import { generateText, Output } from 'ai';
-__PROVIDER_IMPORT__;
-import { z } from 'zod';
+import { generateText, Output } from "ai"
+__PROVIDER_IMPORT__
+import { z } from "zod"
 
 const { output } = await generateText({
   model: __MODEL__,
@@ -15,8 +15,8 @@ const { output } = await generateText({
       age: z.number(),
     }),
   }),
-  prompt: 'Generate a user profile.',
-});
+  prompt: "Generate a user profile.",
+})
 ```
 
 ## Import
@@ -30,13 +30,13 @@ const { output } = await generateText({
 Output specification for plain text generation. This is the default behavior when no `output` is specified.
 
 ```ts
-import { generateText, Output } from 'ai';
+import { generateText, Output } from "ai"
 
 const { output } = await generateText({
   model: yourModel,
   output: Output.text(),
-  prompt: 'Tell me a joke.',
-});
+  prompt: "Tell me a joke.",
+})
 // output is a string
 ```
 
@@ -55,8 +55,8 @@ An `Output<string, string>` specification that generates plain text without sche
 Output specification for typed object generation using schemas. The output is validated against the provided schema to ensure type safety.
 
 ```ts
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai"
+import { z } from "zod"
 
 const { output } = await generateText({
   model: yourModel,
@@ -67,36 +67,36 @@ const { output } = await generateText({
       labels: z.array(z.string()),
     }),
   }),
-  prompt: 'Generate information for a test user.',
-});
+  prompt: "Generate information for a test user.",
+})
 // output matches the schema type
 ```
 
 #### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'schema',
-      type: 'FlexibleSchema<OBJECT>',
-      description:
-        'The schema that defines the structure of the object to generate. Supports Zod schemas, Standard JSON schemas, and custom JSON schemas.',
-    },
-    {
-      name: 'name',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
-    },
-    {
-      name: 'description',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
-    },
-  ]}
+content={[
+{
+name: 'schema',
+type: 'FlexibleSchema<OBJECT>',
+description:
+'The schema that defines the structure of the object to generate. Supports Zod schemas, Standard JSON schemas, and custom JSON schemas.',
+},
+{
+name: 'name',
+type: 'string',
+isOptional: true,
+description:
+'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
+},
+{
+name: 'description',
+type: 'string',
+isOptional: true,
+description:
+'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
+},
+]}
 />
 
 #### Returns
@@ -119,8 +119,8 @@ An `Output<OBJECT, DeepPartial<OBJECT>>` specification where:
 Output specification for generating arrays of typed elements. Each element is validated against the provided element schema.
 
 ```ts
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai"
+import { z } from "zod"
 
 const { output } = await generateText({
   model: yourModel,
@@ -131,36 +131,36 @@ const { output } = await generateText({
       condition: z.string(),
     }),
   }),
-  prompt: 'List the weather for San Francisco and Paris.',
-});
+  prompt: "List the weather for San Francisco and Paris.",
+})
 // output is an array of weather objects
 ```
 
 #### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'element',
-      type: 'FlexibleSchema<ELEMENT>',
-      description:
-        'The schema that defines the structure of each array element. Supports Zod schemas, Valibot schemas, or JSON schemas.',
-    },
-    {
-      name: 'name',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
-    },
-    {
-      name: 'description',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
-    },
-  ]}
+content={[
+{
+name: 'element',
+type: 'FlexibleSchema<ELEMENT>',
+description:
+'The schema that defines the structure of each array element. Supports Zod schemas, Valibot schemas, or JSON schemas.',
+},
+{
+name: 'name',
+type: 'string',
+isOptional: true,
+description:
+'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
+},
+{
+name: 'description',
+type: 'string',
+isOptional: true,
+description:
+'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
+},
+]}
 />
 
 #### Returns
@@ -175,8 +175,8 @@ An `Output<Array<ELEMENT>, Array<ELEMENT>>` specification where:
 When using `streamText` with `Output.array()`, you can iterate over elements as they are generated using `elementStream`:
 
 ```ts
-import { streamText, Output } from 'ai';
-import { z } from 'zod';
+import { streamText, Output } from "ai"
+import { z } from "zod"
 
 const { elementStream } = streamText({
   model: yourModel,
@@ -187,11 +187,11 @@ const { elementStream } = streamText({
       description: z.string(),
     }),
   }),
-  prompt: 'Generate 3 hero descriptions for a fantasy role playing game.',
-});
+  prompt: "Generate 3 hero descriptions for a fantasy role playing game.",
+})
 
 for await (const hero of elementStream) {
-  console.log(hero); // Each hero is complete and validated
+  console.log(hero) // Each hero is complete and validated
 }
 ```
 
@@ -207,43 +207,43 @@ for await (const hero of elementStream) {
 Output specification for selecting from a predefined set of string options. Useful for classification tasks or fixed-enum answers.
 
 ```ts
-import { generateText, Output } from 'ai';
+import { generateText, Output } from "ai"
 
 const { output } = await generateText({
   model: yourModel,
   output: Output.choice({
-    options: ['sunny', 'rainy', 'snowy'],
+    options: ["sunny", "rainy", "snowy"],
   }),
-  prompt: 'Is the weather sunny, rainy, or snowy today?',
-});
+  prompt: "Is the weather sunny, rainy, or snowy today?",
+})
 // output is 'sunny' | 'rainy' | 'snowy'
 ```
 
 #### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'options',
-      type: 'Array<CHOICE>',
-      description:
-        'An array of string options that the model can choose from. The output will be exactly one of these values.',
-    },
-    {
-      name: 'name',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
-    },
-    {
-      name: 'description',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
-    },
-  ]}
+content={[
+{
+name: 'options',
+type: 'Array<CHOICE>',
+description:
+'An array of string options that the model can choose from. The output will be exactly one of these values.',
+},
+{
+name: 'name',
+type: 'string',
+isOptional: true,
+description:
+'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
+},
+{
+name: 'description',
+type: 'string',
+isOptional: true,
+description:
+'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
+},
+]}
 />
 
 #### Returns
@@ -259,36 +259,36 @@ An `Output<CHOICE, CHOICE>` specification where:
 Output specification for unstructured JSON generation. Use this when you want to generate arbitrary JSON without enforcing a specific schema.
 
 ```ts
-import { generateText, Output } from 'ai';
+import { generateText, Output } from "ai"
 
 const { output } = await generateText({
   model: yourModel,
   output: Output.json(),
   prompt:
-    'For each city, return the current temperature and weather condition as a JSON object.',
-});
+    "For each city, return the current temperature and weather condition as a JSON object.",
+})
 // output is any valid JSON value
 ```
 
 #### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'name',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
-    },
-    {
-      name: 'description',
-      type: 'string',
-      isOptional: true,
-      description:
-        'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
-    },
-  ]}
+content={[
+{
+name: 'name',
+type: 'string',
+isOptional: true,
+description:
+'Optional name of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema name.',
+},
+{
+name: 'description',
+type: 'string',
+isOptional: true,
+description:
+'Optional description of the output that should be generated. Used by some providers for additional LLM guidance, e.g. via tool or schema description.',
+},
+]}
 />
 
 #### Returns
@@ -309,21 +309,21 @@ An `Output<JSONValue, JSONValue>` specification that:
 When `generateText` with structured output cannot generate a valid object, it throws a [`NoObjectGeneratedError`](/docs/reference/ai-sdk-errors/ai-no-object-generated-error).
 
 ```ts
-import { generateText, Output, NoObjectGeneratedError } from 'ai';
+import { generateText, Output, NoObjectGeneratedError } from "ai"
 
 try {
   await generateText({
     model: yourModel,
     output: Output.object({ schema }),
-    prompt: 'Generate a user profile.',
-  });
+    prompt: "Generate a user profile.",
+  })
 } catch (error) {
   if (NoObjectGeneratedError.isInstance(error)) {
-    console.log('NoObjectGeneratedError');
-    console.log('Cause:', error.cause);
-    console.log('Text:', error.text);
-    console.log('Response:', error.response);
-    console.log('Usage:', error.usage);
+    console.log("NoObjectGeneratedError")
+    console.log("Cause:", error.cause)
+    console.log("Text:", error.text)
+    console.log("Response:", error.response)
+    console.log("Usage:", error.usage)
   }
 }
 ```

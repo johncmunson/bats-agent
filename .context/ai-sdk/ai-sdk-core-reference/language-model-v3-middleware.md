@@ -13,29 +13,29 @@ See [Language Model Middleware](/docs/ai-sdk-core/middleware) for more informati
 ## Import
 
 <Snippet
-  text={`import { LanguageModelV3Middleware } from "ai"`}
-  prompt={false}
+text={`import { LanguageModelV3Middleware } from "ai"`}
+prompt={false}
 />
 
 ## API Signature
 
 <PropertiesTable
-  content={[
-    {
-      name: 'transformParams',
-      type: '({ type: "generate" | "stream", params: LanguageModelV3CallOptions }) => Promise<LanguageModelV3CallOptions>',
-      description:
-        'Transforms the parameters before they are passed to the language model.',
-    },
-    {
-      name: 'wrapGenerate',
-      type: '({ doGenerate: DoGenerateFunction, params: LanguageModelV3CallOptions, model: LanguageModelV3 }) => Promise<DoGenerateResult>',
-      description: 'Wraps the generate operation of the language model.',
-    },
-    {
-      name: 'wrapStream',
-      type: '({ doStream: DoStreamFunction, params: LanguageModelV3CallOptions, model: LanguageModelV3 }) => Promise<DoStreamResult>',
-      description: 'Wraps the stream operation of the language model.',
-    },
-  ]}
+content={[
+{
+name: 'transformParams',
+type: '({ type: "generate" | "stream", params: LanguageModelV3CallOptions }) => Promise<LanguageModelV3CallOptions>',
+description:
+'Transforms the parameters before they are passed to the language model.',
+},
+{
+name: 'wrapGenerate',
+type: '({ doGenerate: DoGenerateFunction, params: LanguageModelV3CallOptions, model: LanguageModelV3 }) => Promise<DoGenerateResult>',
+description: 'Wraps the generate operation of the language model.',
+},
+{
+name: 'wrapStream',
+type: '({ doStream: DoStreamFunction, params: LanguageModelV3CallOptions, model: LanguageModelV3 }) => Promise<DoStreamResult>',
+description: 'Wraps the stream operation of the language model.',
+},
+]}
 />

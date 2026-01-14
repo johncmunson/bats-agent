@@ -3,19 +3,19 @@
 `extractReasoningMiddleware` is a middleware function that extracts XML-tagged reasoning sections from generated text and exposes them separately from the main text content. This is particularly useful when you want to separate an AI model's reasoning process from its final output.
 
 ```ts
-import { extractReasoningMiddleware } from 'ai';
+import { extractReasoningMiddleware } from "ai"
 
 const middleware = extractReasoningMiddleware({
-  tagName: 'reasoning',
-  separator: '\n',
-});
+  tagName: "reasoning",
+  separator: "\n",
+})
 ```
 
 ## Import
 
 <Snippet
-  text={`import { extractReasoningMiddleware } from "ai"`}
-  prompt={false}
+text={`import { extractReasoningMiddleware } from "ai"`}
+prompt={false}
 />
 
 ## API Signature
@@ -23,29 +23,29 @@ const middleware = extractReasoningMiddleware({
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'tagName',
-      type: 'string',
-      isOptional: false,
-      description:
-        'The name of the XML tag to extract reasoning from (without angle brackets)',
-    },
-    {
-      name: 'separator',
-      type: 'string',
-      isOptional: true,
-      description:
-        'The separator to use between reasoning and text sections. Defaults to "\\n"',
-    },
-    {
-      name: 'startWithReasoning',
-      type: 'boolean',
-      isOptional: true,
-      description:
-        'Starts with reasoning tokens. Set to true when the response always starts with reasoning and the initial tag is omitted. Defaults to false.',
-    },
-  ]}
+content={[
+{
+name: 'tagName',
+type: 'string',
+isOptional: false,
+description:
+'The name of the XML tag to extract reasoning from (without angle brackets)',
+},
+{
+name: 'separator',
+type: 'string',
+isOptional: true,
+description:
+'The separator to use between reasoning and text sections. Defaults to "\\n"',
+},
+{
+name: 'startWithReasoning',
+type: 'boolean',
+isOptional: true,
+description:
+'Starts with reasoning tokens. Set to true when the response always starts with reasoning and the initial tag is omitted. Defaults to false.',
+},
+]}
 />
 
 ### Returns

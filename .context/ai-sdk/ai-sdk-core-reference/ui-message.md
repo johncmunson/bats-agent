@@ -15,29 +15,29 @@
 Here's an example of how to create a custom typed UIMessage for your application:
 
 ```typescript
-import { InferUITools, ToolSet, UIMessage, tool } from 'ai';
-import z from 'zod';
+import { InferUITools, ToolSet, UIMessage, tool } from "ai"
+import z from "zod"
 
 const metadataSchema = z.object({
   someMetadata: z.string().datetime(),
-});
+})
 
-type MyMetadata = z.infer<typeof metadataSchema>;
+type MyMetadata = z.infer<typeof metadataSchema>
 
 const dataPartSchema = z.object({
   someDataPart: z.object({}),
   anotherDataPart: z.object({}),
-});
+})
 
-type MyDataPart = z.infer<typeof dataPartSchema>;
+type MyDataPart = z.infer<typeof dataPartSchema>
 
 const tools = {
   someTool: tool({}),
-} satisfies ToolSet;
+} satisfies ToolSet
 
-type MyTools = InferUITools<typeof tools>;
+type MyTools = InferUITools<typeof tools>
 
-export type MyUIMessage = UIMessage<MyMetadata, MyDataPart, MyTools>;
+export type MyUIMessage = UIMessage<MyMetadata, MyDataPart, MyTools>
 ```
 
 ## `UIMessage` Interface
@@ -51,22 +51,22 @@ interface UIMessage<
   /**
    * A unique identifier for the message.
    */
-  id: string;
+  id: string
 
   /**
    * The role of the message.
    */
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant"
 
   /**
    * The metadata of the message.
    */
-  metadata?: METADATA;
+  metadata?: METADATA
 
   /**
    * The parts of the message. Use this for rendering the message in the UI.
    */
-  parts: Array<UIMessagePart<DATA_PARTS, TOOLS>>;
+  parts: Array<UIMessagePart<DATA_PARTS, TOOLS>>
 }
 ```
 
@@ -78,16 +78,16 @@ A text part of a message.
 
 ```typescript
 type TextUIPart = {
-  type: 'text';
+  type: "text"
   /**
    * The text content.
    */
-  text: string;
+  text: string
   /**
    * The state of the text part.
    */
-  state?: 'streaming' | 'done';
-};
+  state?: "streaming" | "done"
+}
 ```
 
 ### `ReasoningUIPart`
@@ -96,20 +96,20 @@ A reasoning part of a message.
 
 ```typescript
 type ReasoningUIPart = {
-  type: 'reasoning';
+  type: "reasoning"
   /**
    * The reasoning text.
    */
-  text: string;
+  text: string
   /**
    * The state of the reasoning part.
    */
-  state?: 'streaming' | 'done';
+  state?: "streaming" | "done"
   /**
    * The provider metadata.
    */
-  providerMetadata?: Record<string, any>;
-};
+  providerMetadata?: Record<string, any>
+}
 ```
 
 ### `ToolUIPart`
@@ -124,39 +124,39 @@ A tool part of a message that represents tool invocations and their results.
 ```typescript
 type ToolUIPart<TOOLS extends UITools = UITools> = ValueOf<{
   [NAME in keyof TOOLS & string]: {
-    type: `tool-${NAME}`;
-    toolCallId: string;
+    type: `tool-${NAME}`
+    toolCallId: string
   } & (
     | {
-        state: 'input-streaming';
-        input: DeepPartial<TOOLS[NAME]['input']> | undefined;
-        providerExecuted?: boolean;
-        output?: never;
-        errorText?: never;
+        state: "input-streaming"
+        input: DeepPartial<TOOLS[NAME]["input"]> | undefined
+        providerExecuted?: boolean
+        output?: never
+        errorText?: never
       }
     | {
-        state: 'input-available';
-        input: TOOLS[NAME]['input'];
-        providerExecuted?: boolean;
-        output?: never;
-        errorText?: never;
+        state: "input-available"
+        input: TOOLS[NAME]["input"]
+        providerExecuted?: boolean
+        output?: never
+        errorText?: never
       }
     | {
-        state: 'output-available';
-        input: TOOLS[NAME]['input'];
-        output: TOOLS[NAME]['output'];
-        errorText?: never;
-        providerExecuted?: boolean;
+        state: "output-available"
+        input: TOOLS[NAME]["input"]
+        output: TOOLS[NAME]["output"]
+        errorText?: never
+        providerExecuted?: boolean
       }
     | {
-        state: 'output-error';
-        input: TOOLS[NAME]['input'];
-        output?: never;
-        errorText: string;
-        providerExecuted?: boolean;
+        state: "output-error"
+        input: TOOLS[NAME]["input"]
+        output?: never
+        errorText: string
+        providerExecuted?: boolean
       }
-  );
-}>;
+  )
+}>
 ```
 
 ### `SourceUrlUIPart`
@@ -165,12 +165,12 @@ A source URL part of a message.
 
 ```typescript
 type SourceUrlUIPart = {
-  type: 'source-url';
-  sourceId: string;
-  url: string;
-  title?: string;
-  providerMetadata?: Record<string, any>;
-};
+  type: "source-url"
+  sourceId: string
+  url: string
+  title?: string
+  providerMetadata?: Record<string, any>
+}
 ```
 
 ### `SourceDocumentUIPart`
@@ -179,13 +179,13 @@ A document source part of a message.
 
 ```typescript
 type SourceDocumentUIPart = {
-  type: 'source-document';
-  sourceId: string;
-  mediaType: string;
-  title: string;
-  filename?: string;
-  providerMetadata?: Record<string, any>;
-};
+  type: "source-document"
+  sourceId: string
+  mediaType: string
+  title: string
+  filename?: string
+  providerMetadata?: Record<string, any>
+}
 ```
 
 ### `FileUIPart`
@@ -194,21 +194,21 @@ A file part of a message.
 
 ```typescript
 type FileUIPart = {
-  type: 'file';
+  type: "file"
   /**
    * IANA media type of the file.
    */
-  mediaType: string;
+  mediaType: string
   /**
    * Optional filename of the file.
    */
-  filename?: string;
+  filename?: string
   /**
    * The URL of the file.
    * It can either be a URL to a hosted file or a Data URL.
    */
-  url: string;
-};
+  url: string
+}
 ```
 
 ### `DataUIPart`
@@ -223,11 +223,11 @@ A data part of a message for custom data types.
 ```typescript
 type DataUIPart<DATA_TYPES extends UIDataTypes> = ValueOf<{
   [NAME in keyof DATA_TYPES & string]: {
-    type: `data-${NAME}`;
-    id?: string;
-    data: DATA_TYPES[NAME];
-  };
-}>;
+    type: `data-${NAME}`
+    id?: string
+    data: DATA_TYPES[NAME]
+  }
+}>
 ```
 
 ### `StepStartUIPart`
@@ -236,6 +236,6 @@ A step boundary part of a message.
 
 ```typescript
 type StepStartUIPart = {
-  type: 'step-start';
-};
+  type: "step-start"
+}
 ```

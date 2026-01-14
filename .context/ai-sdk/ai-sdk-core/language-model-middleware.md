@@ -14,12 +14,12 @@ It takes a language model and a language model middleware and returns a new
 language model that incorporates the middleware.
 
 ```ts
-import { wrapLanguageModel } from 'ai';
+import { wrapLanguageModel } from "ai"
 
 const wrappedLanguageModel = wrapLanguageModel({
   model: yourModel,
   middleware: yourLanguageModelMiddleware,
-});
+})
 ```
 
 The wrapped language model can be used just like any other language model, e.g. in `streamText`:
@@ -27,8 +27,8 @@ The wrapped language model can be used just like any other language model, e.g. 
 ```ts highlight="2"
 const result = streamText({
   model: wrappedLanguageModel,
-  prompt: 'What cities are in the United States?',
-});
+  prompt: "What cities are in the United States?",
+})
 ```
 
 ## Multiple middlewares
@@ -40,7 +40,7 @@ The middlewares will be applied in the order they are provided.
 const wrappedLanguageModel = wrapLanguageModel({
   model: yourModel,
   middleware: [firstMiddleware, secondMiddleware],
-});
+})
 
 // applied as: firstMiddleware(secondMiddleware(yourModel))
 ```
@@ -62,12 +62,12 @@ e.g. &lt;think&gt; and &lt;/think&gt;.
 The `extractReasoningMiddleware` function can be used to extract this reasoning information and expose it as a `reasoning` property on the result.
 
 ```ts
-import { wrapLanguageModel, extractReasoningMiddleware } from 'ai';
+import { wrapLanguageModel, extractReasoningMiddleware } from "ai"
 
 const model = wrapLanguageModel({
   model: yourModel,
-  middleware: extractReasoningMiddleware({ tagName: 'think' }),
-});
+  middleware: extractReasoningMiddleware({ tagName: "think" }),
+})
 ```
 
 You can then use that enhanced model in functions like `generateText` and `streamText`.
@@ -83,12 +83,12 @@ The `simulateStreamingMiddleware` function can be used to simulate streaming beh
 This is useful when you want to maintain a consistent streaming interface even when using models that only provide complete responses.
 
 ```ts
-import { wrapLanguageModel, simulateStreamingMiddleware } from 'ai';
+import { wrapLanguageModel, simulateStreamingMiddleware } from "ai"
 
 const model = wrapLanguageModel({
   model: yourModel,
   middleware: simulateStreamingMiddleware(),
-});
+})
 ```
 
 ### Default Settings
@@ -96,7 +96,7 @@ const model = wrapLanguageModel({
 The `defaultSettingsMiddleware` function can be used to apply default settings to a language model.
 
 ```ts
-import { wrapLanguageModel, defaultSettingsMiddleware } from 'ai';
+import { wrapLanguageModel, defaultSettingsMiddleware } from "ai"
 
 const model = wrapLanguageModel({
   model: yourModel,
@@ -107,7 +107,7 @@ const model = wrapLanguageModel({
       providerOptions: { openai: { store: false } },
     },
   }),
-});
+})
 ```
 
 ### Add Tool Input Examples
@@ -117,38 +117,38 @@ This is useful for providers that don't natively support the `inputExamples` pro
 The middleware serializes the examples into the tool's description text so models can still benefit from seeing example inputs.
 
 ```ts
-import { wrapLanguageModel, addToolInputExamplesMiddleware } from 'ai';
+import { wrapLanguageModel, addToolInputExamplesMiddleware } from "ai"
 
 const model = wrapLanguageModel({
   model: yourModel,
   middleware: addToolInputExamplesMiddleware({
-    examplesPrefix: 'Input Examples:',
+    examplesPrefix: "Input Examples:",
   }),
-});
+})
 ```
 
 When you define a tool with `inputExamples`, the middleware will append them to the tool's description:
 
 ```ts
-import { generateText, tool } from 'ai';
-import { z } from 'zod';
+import { generateText, tool } from "ai"
+import { z } from "zod"
 
 const result = await generateText({
   model, // wrapped model from above
   tools: {
     weather: tool({
-      description: 'Get the weather in a location',
+      description: "Get the weather in a location",
       inputSchema: z.object({
         location: z.string(),
       }),
       inputExamples: [
-        { input: { location: 'San Francisco' } },
-        { input: { location: 'London' } },
+        { input: { location: "San Francisco" } },
+        { input: { location: "London" } },
       ],
     }),
   },
-  prompt: 'What is the weather in Tokyo?',
-});
+  prompt: "What is the weather in Tokyo?",
+})
 ```
 
 The tool description will be transformed to:
@@ -171,12 +171,12 @@ Input Examples:
 const model = wrapLanguageModel({
   model: yourModel,
   middleware: addToolInputExamplesMiddleware({
-    examplesPrefix: 'Input Examples:',
+    examplesPrefix: "Input Examples:",
     formatExample: (example, index) =>
       `${index + 1}. ${JSON.stringify(example.input)}`,
     removeInputExamples: true,
   }),
-});
+})
 ```
 
 ## Community Middleware
@@ -206,13 +206,13 @@ The `@ai-sdk-tool/parser` package offers three middleware variants:
 Here's how you can enable function calls with Gemma models that don't support them natively:
 
 ```ts
-import { wrapLanguageModel } from 'ai';
-import { gemmaToolMiddleware } from '@ai-sdk-tool/parser';
+import { wrapLanguageModel } from "ai"
+import { gemmaToolMiddleware } from "@ai-sdk-tool/parser"
 
 const model = wrapLanguageModel({
-  model: openrouter('google/gemma-3-27b-it'),
+  model: openrouter("google/gemma-3-27b-it"),
   middleware: gemmaToolMiddleware,
-});
+})
 ```
 
 Find more examples at this [link](https://github.com/minpeter/ai-sdk-tool-call-middleware/tree/main/examples/core/src).
@@ -250,29 +250,29 @@ This example shows how to log the parameters and generated text of a language mo
 import type {
   LanguageModelV3Middleware,
   LanguageModelV3StreamPart,
-} from '@ai-sdk/provider';
+} from "@ai-sdk/provider"
 
 export const yourLogMiddleware: LanguageModelV3Middleware = {
   wrapGenerate: async ({ doGenerate, params }) => {
-    console.log('doGenerate called');
-    console.log(`params: ${JSON.stringify(params, null, 2)}`);
+    console.log("doGenerate called")
+    console.log(`params: ${JSON.stringify(params, null, 2)}`)
 
-    const result = await doGenerate();
+    const result = await doGenerate()
 
-    console.log('doGenerate finished');
-    console.log(`generated text: ${result.text}`);
+    console.log("doGenerate finished")
+    console.log(`generated text: ${result.text}`)
 
-    return result;
+    return result
   },
 
   wrapStream: async ({ doStream, params }) => {
-    console.log('doStream called');
-    console.log(`params: ${JSON.stringify(params, null, 2)}`);
+    console.log("doStream called")
+    console.log(`params: ${JSON.stringify(params, null, 2)}`)
 
-    const { stream, ...rest } = await doStream();
+    const { stream, ...rest } = await doStream()
 
-    let generatedText = '';
-    const textBlocks = new Map<string, string>();
+    let generatedText = ""
+    const textBlocks = new Map<string, string>()
 
     const transformStream = new TransformStream<
       LanguageModelV3StreamPart,
@@ -280,40 +280,40 @@ export const yourLogMiddleware: LanguageModelV3Middleware = {
     >({
       transform(chunk, controller) {
         switch (chunk.type) {
-          case 'text-start': {
-            textBlocks.set(chunk.id, '');
-            break;
+          case "text-start": {
+            textBlocks.set(chunk.id, "")
+            break
           }
-          case 'text-delta': {
-            const existing = textBlocks.get(chunk.id) || '';
-            textBlocks.set(chunk.id, existing + chunk.delta);
-            generatedText += chunk.delta;
-            break;
+          case "text-delta": {
+            const existing = textBlocks.get(chunk.id) || ""
+            textBlocks.set(chunk.id, existing + chunk.delta)
+            generatedText += chunk.delta
+            break
           }
-          case 'text-end': {
+          case "text-end": {
             console.log(
               `Text block ${chunk.id} completed:`,
               textBlocks.get(chunk.id),
-            );
-            break;
+            )
+            break
           }
         }
 
-        controller.enqueue(chunk);
+        controller.enqueue(chunk)
       },
 
       flush() {
-        console.log('doStream finished');
-        console.log(`generated text: ${generatedText}`);
+        console.log("doStream finished")
+        console.log(`generated text: ${generatedText}`)
       },
-    });
+    })
 
     return {
       stream: stream.pipeThrough(transformStream),
       ...rest,
-    };
+    }
   },
-};
+}
 ```
 
 ### Caching
@@ -321,27 +321,27 @@ export const yourLogMiddleware: LanguageModelV3Middleware = {
 This example shows how to build a simple cache for the generated text of a language model call.
 
 ```ts
-import type { LanguageModelV3Middleware } from '@ai-sdk/provider';
+import type { LanguageModelV3Middleware } from "@ai-sdk/provider"
 
-const cache = new Map<string, any>();
+const cache = new Map<string, any>()
 
 export const yourCacheMiddleware: LanguageModelV3Middleware = {
   wrapGenerate: async ({ doGenerate, params }) => {
-    const cacheKey = JSON.stringify(params);
+    const cacheKey = JSON.stringify(params)
 
     if (cache.has(cacheKey)) {
-      return cache.get(cacheKey);
+      return cache.get(cacheKey)
     }
 
-    const result = await doGenerate();
+    const result = await doGenerate()
 
-    cache.set(cacheKey, result);
+    cache.set(cacheKey, result)
 
-    return result;
+    return result
   },
 
   // here you would implement the caching logic for streaming
-};
+}
 ```
 
 ### Retrieval Augmented Generation (RAG)
@@ -355,27 +355,27 @@ This example shows how to use RAG as middleware.
 </Note>
 
 ```ts
-import type { LanguageModelV3Middleware } from '@ai-sdk/provider';
+import type { LanguageModelV3Middleware } from "@ai-sdk/provider"
 
 export const yourRagMiddleware: LanguageModelV3Middleware = {
   transformParams: async ({ params }) => {
     const lastUserMessageText = getLastUserMessageText({
       prompt: params.prompt,
-    });
+    })
 
     if (lastUserMessageText == null) {
-      return params; // do not use RAG (send unmodified parameters)
+      return params // do not use RAG (send unmodified parameters)
     }
 
     const instruction =
-      'Use the following information to answer the question:\n' +
+      "Use the following information to answer the question:\n" +
       findSources({ text: lastUserMessageText })
-        .map(chunk => JSON.stringify(chunk))
-        .join('\n');
+        .map((chunk) => JSON.stringify(chunk))
+        .join("\n")
 
-    return addToLastUserMessage({ params, text: instruction });
+    return addToLastUserMessage({ params, text: instruction })
   },
-};
+}
 ```
 
 ### Guardrails
@@ -384,22 +384,22 @@ Guard rails are a way to ensure that the generated text of a language model call
 is safe and appropriate. This example shows how to use guardrails as middleware.
 
 ```ts
-import type { LanguageModelV3Middleware } from '@ai-sdk/provider';
+import type { LanguageModelV3Middleware } from "@ai-sdk/provider"
 
 export const yourGuardrailMiddleware: LanguageModelV3Middleware = {
   wrapGenerate: async ({ doGenerate }) => {
-    const { text, ...rest } = await doGenerate();
+    const { text, ...rest } = await doGenerate()
 
     // filtering approach, e.g. for PII or other sensitive information:
-    const cleanedText = text?.replace(/badword/g, '<REDACTED>');
+    const cleanedText = text?.replace(/badword/g, "<REDACTED>")
 
-    return { text: cleanedText, ...rest };
+    return { text: cleanedText, ...rest }
   },
 
   // here you would implement the guardrail logic for streaming
   // Note: streaming guardrails are difficult to implement, because
   // you do not know the full content of the stream until it's finished.
-};
+}
 ```
 
 ## Configuring Per Request Custom Metadata
@@ -407,30 +407,30 @@ export const yourGuardrailMiddleware: LanguageModelV3Middleware = {
 To send and access custom metadata in Middleware, you can use `providerOptions`. This is useful when building logging middleware where you want to pass additional context like user IDs, timestamps, or other contextual data that can help with tracking and debugging.
 
 ```ts
-import { generateText, wrapLanguageModel } from 'ai';
-__PROVIDER_IMPORT__;
-import type { LanguageModelV3Middleware } from '@ai-sdk/provider';
+import { generateText, wrapLanguageModel } from "ai"
+__PROVIDER_IMPORT__
+import type { LanguageModelV3Middleware } from "@ai-sdk/provider"
 
 export const yourLogMiddleware: LanguageModelV3Middleware = {
   wrapGenerate: async ({ doGenerate, params }) => {
-    console.log('METADATA', params?.providerMetadata?.yourLogMiddleware);
-    const result = await doGenerate();
-    return result;
+    console.log("METADATA", params?.providerMetadata?.yourLogMiddleware)
+    const result = await doGenerate()
+    return result
   },
-};
+}
 
 const { text } = await generateText({
   model: wrapLanguageModel({
     model: __MODEL__,
     middleware: yourLogMiddleware,
   }),
-  prompt: 'Invent a new holiday and describe its traditions.',
+  prompt: "Invent a new holiday and describe its traditions.",
   providerOptions: {
     yourLogMiddleware: {
-      hello: 'world',
+      hello: "world",
     },
   },
-});
+})
 
-console.log(text);
+console.log(text)
 ```

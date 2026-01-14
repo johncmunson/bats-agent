@@ -11,9 +11,9 @@ can access by their ids in the format `providerId:modelId`.
 You can create a registry with multiple providers and models using `createProviderRegistry`.
 
 ```ts
-import { anthropic } from '@ai-sdk/anthropic';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createProviderRegistry } from 'ai';
+import { anthropic } from "@ai-sdk/anthropic"
+import { createOpenAI } from "@ai-sdk/openai"
+import { createProviderRegistry } from "ai"
 
 export const registry = createProviderRegistry({
   // register provider with prefix and default setup:
@@ -23,7 +23,7 @@ export const registry = createProviderRegistry({
   openai: createOpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   }),
-});
+})
 ```
 
 ### Custom Separator
@@ -36,11 +36,11 @@ const registry = createProviderRegistry(
     anthropic,
     openai,
   },
-  { separator: ' > ' },
-);
+  { separator: " > " },
+)
 
 // Now you can use the custom separator
-const model = registry.languageModel('anthropic > claude-3-opus-20240229');
+const model = registry.languageModel("anthropic > claude-3-opus-20240229")
 ```
 
 ### Language models
@@ -49,13 +49,13 @@ You can access language models by using the `languageModel` method on the regist
 The provider id will become the prefix of the model id: `providerId:modelId`.
 
 ```ts highlight={"5"}
-import { generateText } from 'ai';
-import { registry } from './registry';
+import { generateText } from "ai"
+import { registry } from "./registry"
 
 const { text } = await generateText({
-  model: registry.languageModel('openai:gpt-4.1'),
-  prompt: 'Invent a new holiday and describe its traditions.',
-});
+  model: registry.languageModel("openai:gpt-4.1"),
+  prompt: "Invent a new holiday and describe its traditions.",
+})
 ```
 
 ### Text embedding models
@@ -64,13 +64,13 @@ You can access text embedding models by using the `.embeddingModel` method on th
 The provider id will become the prefix of the model id: `providerId:modelId`.
 
 ```ts highlight={"5"}
-import { embed } from 'ai';
-import { registry } from './registry';
+import { embed } from "ai"
+import { registry } from "./registry"
 
 const { embedding } = await embed({
-  model: registry.embeddingModel('openai:text-embedding-3-small'),
-  value: 'sunny day at the beach',
-});
+  model: registry.embeddingModel("openai:text-embedding-3-small"),
+  value: "sunny day at the beach",
+})
 ```
 
 ### Image models
@@ -79,13 +79,13 @@ You can access image models by using the `imageModel` method on the registry.
 The provider id will become the prefix of the model id: `providerId:modelId`.
 
 ```ts highlight={"5"}
-import { generateImage } from 'ai';
-import { registry } from './registry';
+import { generateImage } from "ai"
+import { registry } from "./registry"
 
 const { image } = await generateImage({
-  model: registry.imageModel('openai:dall-e-3'),
-  prompt: 'A beautiful sunset over a calm ocean',
-});
+  model: registry.imageModel("openai:dall-e-3"),
+  prompt: "A beautiful sunset over a calm ocean",
+})
 ```
 
 ## Import
@@ -97,56 +97,56 @@ const { image } = await generateImage({
 ### Parameters
 
 <PropertiesTable
-  content={[
-    {
-      name: 'providers',
-      type: 'Record<string, Provider>',
-      description:
-        'The unique identifier for the provider. It should be unique within the registry.',
-      properties: [
-        {
-          type: 'Provider',
-          parameters: [
-            {
-              name: 'languageModel',
-              type: '(id: string) => LanguageModel',
-              description:
-                'A function that returns a language model by its id.',
-            },
-            {
-              name: 'embeddingModel',
-              type: '(id: string) => EmbeddingModel<string>',
-              description:
-                'A function that returns a text embedding model by its id.',
-            },
-            {
-              name: 'imageModel',
-              type: '(id: string) => ImageModel',
-              description: 'A function that returns an image model by its id.',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'options',
-      type: 'object',
-      description: 'Optional configuration for the registry.',
-      properties: [
-        {
-          type: 'Options',
-          parameters: [
-            {
-              name: 'separator',
-              type: 'string',
-              description:
-                'Custom separator between provider and model IDs. Defaults to ":".',
-            },
-          ],
-        },
-      ],
-    },
-  ]}
+content={[
+{
+name: 'providers',
+type: 'Record<string, Provider>',
+description:
+'The unique identifier for the provider. It should be unique within the registry.',
+properties: [
+{
+type: 'Provider',
+parameters: [
+{
+name: 'languageModel',
+type: '(id: string) => LanguageModel',
+description:
+'A function that returns a language model by its id.',
+},
+{
+name: 'embeddingModel',
+type: '(id: string) => EmbeddingModel<string>',
+description:
+'A function that returns a text embedding model by its id.',
+},
+{
+name: 'imageModel',
+type: '(id: string) => ImageModel',
+description: 'A function that returns an image model by its id.',
+},
+],
+},
+],
+},
+{
+name: 'options',
+type: 'object',
+description: 'Optional configuration for the registry.',
+properties: [
+{
+type: 'Options',
+parameters: [
+{
+name: 'separator',
+type: 'string',
+description:
+'Custom separator between provider and model IDs. Defaults to ":".',
+},
+],
+},
+],
+},
+]}
 />
 
 ### Returns
@@ -154,24 +154,24 @@ const { image } = await generateImage({
 The `createProviderRegistry` function returns a `Provider` instance. It has the following methods:
 
 <PropertiesTable
-  content={[
-    {
-      name: 'languageModel',
-      type: '(id: string) => LanguageModel',
-      description:
-        'A function that returns a language model by its id (format: providerId:modelId)',
-    },
-    {
-      name: 'embeddingModel',
-      type: '(id: string) => EmbeddingModel<string>',
-      description:
-        'A function that returns a text embedding model by its id (format: providerId:modelId)',
-    },
-    {
-      name: 'imageModel',
-      type: '(id: string) => ImageModel',
-      description:
-        'A function that returns an image model by its id (format: providerId:modelId)',
-    },
-  ]}
+content={[
+{
+name: 'languageModel',
+type: '(id: string) => LanguageModel',
+description:
+'A function that returns a language model by its id (format: providerId:modelId)',
+},
+{
+name: 'embeddingModel',
+type: '(id: string) => EmbeddingModel<string>',
+description:
+'A function that returns a text embedding model by its id (format: providerId:modelId)',
+},
+{
+name: 'imageModel',
+type: '(id: string) => ImageModel',
+description:
+'A function that returns an image model by its id (format: providerId:modelId)',
+},
+]}
 />

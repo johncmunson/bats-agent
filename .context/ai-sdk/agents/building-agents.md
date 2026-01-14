@@ -18,16 +18,16 @@ The ToolLoopAgent class provides a single place to define your agent's behavior.
 Define an agent by instantiating the ToolLoopAgent class with your desired configuration:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const myAgent = new ToolLoopAgent({
   model: __MODEL__,
-  instructions: 'You are a helpful assistant.',
+  instructions: "You are a helpful assistant.",
   tools: {
     // Your tools here
   },
-});
+})
 ```
 
 ## Configuration Options
@@ -37,13 +37,13 @@ The Agent class accepts all the same settings as `generateText` and `streamText`
 ### Model and System Instructions
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
-  instructions: 'You are an expert software engineer.',
-});
+  instructions: "You are an expert software engineer.",
+})
 ```
 
 ### Tools
@@ -51,25 +51,25 @@ const agent = new ToolLoopAgent({
 Provide tools that the agent can use to accomplish tasks:
 
 ```ts
-import { ToolLoopAgent, tool } from 'ai';
-__PROVIDER_IMPORT__;
-import { z } from 'zod';
+import { ToolLoopAgent, tool } from "ai"
+__PROVIDER_IMPORT__
+import { z } from "zod"
 
 const codeAgent = new ToolLoopAgent({
   model: __MODEL__,
   tools: {
     runCode: tool({
-      description: 'Execute Python code',
+      description: "Execute Python code",
       inputSchema: z.object({
         code: z.string(),
       }),
       execute: async ({ code }) => {
         // Execute code and return result
-        return { output: 'Code executed successfully' };
+        return { output: "Code executed successfully" }
       },
     }),
   },
-});
+})
 ```
 
 ### Loop Control
@@ -79,13 +79,13 @@ By default, agents run for 20 steps (`stopWhen: stepCountIs(20)`). In each step,
 To let agents call multiple tools in sequence, configure `stopWhen` to allow more steps. After each tool execution, the agent triggers a new generation where the model can call another tool or generate text:
 
 ```ts
-import { ToolLoopAgent, stepCountIs } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent, stepCountIs } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
   stopWhen: stepCountIs(20), // Allow up to 20 steps
-});
+})
 ```
 
 Each step represents one generation (which results in either text or a tool call). The loop continues until:
@@ -98,8 +98,8 @@ Each step represents one generation (which results in either text or a tool call
 You can combine multiple conditions:
 
 ```ts
-import { ToolLoopAgent, stepCountIs } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent, stepCountIs } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -107,7 +107,7 @@ const agent = new ToolLoopAgent({
     stepCountIs(20), // Maximum 20 steps
     yourCustomCondition(), // Custom logic for when to stop
   ],
-});
+})
 ```
 
 Learn more about [loop control and stop conditions](/docs/agents/loop-control).
@@ -117,25 +117,25 @@ Learn more about [loop control and stop conditions](/docs/agents/loop-control).
 Control how the agent uses tools:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
   tools: {
     // your tools here
   },
-  toolChoice: 'required', // Force tool use
+  toolChoice: "required", // Force tool use
   // or toolChoice: 'none' to disable tools
   // or toolChoice: 'auto' (default) to let the model decide
-});
+})
 ```
 
 You can also force the use of a specific tool:
 
 ```ts
-import { ToolLoopAgent } from 'ai';
-__PROVIDER_IMPORT__;
+import { ToolLoopAgent } from "ai"
+__PROVIDER_IMPORT__
 
 const agent = new ToolLoopAgent({
   model: __MODEL__,
@@ -144,10 +144,10 @@ const agent = new ToolLoopAgent({
     cityAttractions: attractionsTool,
   },
   toolChoice: {
-    type: 'tool',
-    toolName: 'weather', // Force the weather tool to be used
+    type: "tool",
+    toolName: "weather", // Force the weather tool to be used
   },
-});
+})
 ```
 
 ### Structured Output
@@ -155,25 +155,25 @@ const agent = new ToolLoopAgent({
 Define structured output schemas:
 
 ```ts
-import { ToolLoopAgent, Output, stepCountIs } from 'ai';
-__PROVIDER_IMPORT__;
-import { z } from 'zod';
+import { ToolLoopAgent, Output, stepCountIs } from "ai"
+__PROVIDER_IMPORT__
+import { z } from "zod"
 
 const analysisAgent = new ToolLoopAgent({
   model: __MODEL__,
   output: Output.object({
     schema: z.object({
-      sentiment: z.enum(['positive', 'neutral', 'negative']),
+      sentiment: z.enum(["positive", "neutral", "negative"]),
       summary: z.string(),
       keyPoints: z.array(z.string()),
     }),
   }),
   stopWhen: stepCountIs(10),
-});
+})
 
 const { output } = await analysisAgent.generate({
-  prompt: 'Analyze customer feedback from the last quarter',
-});
+  prompt: "Analyze customer feedback from the last quarter",
+})
 ```
 
 ## Define Agent Behavior with System Instructions
@@ -188,8 +188,8 @@ Set the agent's role and expertise:
 const agent = new ToolLoopAgent({
   model: __MODEL__,
   instructions:
-    'You are an expert data analyst. You provide clear insights from complex data.',
-});
+    "You are an expert data analyst. You provide clear insights from complex data.",
+})
 ```
 
 ### Detailed Behavioral Instructions
@@ -207,7 +207,7 @@ const codeReviewAgent = new ToolLoopAgent({
   - Suggest improvements for readability and maintainability
   - Be constructive and educational in your feedback
   - Always explain why something is an issue and how to fix it`,
-});
+})
 ```
 
 ### Constrain Agent Behavior
@@ -230,7 +230,7 @@ const customerSupportAgent = new ToolLoopAgent({
     lookupPolicy,
     createTicket,
   },
-});
+})
 ```
 
 ### Tool Usage Instructions
@@ -253,7 +253,7 @@ const researchAgent = new ToolLoopAgent({
     analyzeDocument,
     extractQuotes,
   },
-});
+})
 ```
 
 ### Format and Style Instructions
@@ -273,7 +273,7 @@ const technicalWriterAgent = new ToolLoopAgent({
   - Write in second person ("you" instead of "the user")
 
   Always format responses in Markdown.`,
-});
+})
 ```
 
 ## Using an Agent
@@ -286,10 +286,10 @@ Use `generate()` for one-time text generation:
 
 ```ts
 const result = await myAgent.generate({
-  prompt: 'What is the weather like?',
-});
+  prompt: "What is the weather like?",
+})
 
-console.log(result.text);
+console.log(result.text)
 ```
 
 ### Stream Text
@@ -298,11 +298,11 @@ Use `stream()` for streaming responses:
 
 ```ts
 const stream = myAgent.stream({
-  prompt: 'Tell me a story',
-});
+  prompt: "Tell me a story",
+})
 
 for await (const chunk of stream.textStream) {
-  console.log(chunk);
+  console.log(chunk)
 }
 ```
 
@@ -312,15 +312,15 @@ Use `createAgentUIStreamResponse()` to create API responses for client applicati
 
 ```ts
 // In your API route (e.g., app/api/chat/route.ts)
-import { createAgentUIStreamResponse } from 'ai';
+import { createAgentUIStreamResponse } from "ai"
 
 export async function POST(request: Request) {
-  const { messages } = await request.json();
+  const { messages } = await request.json()
 
   return createAgentUIStreamResponse({
     agent: myAgent,
     messages,
-  });
+  })
 }
 ```
 
@@ -329,26 +329,26 @@ export async function POST(request: Request) {
 You can infer types for your agent's `UIMessage`s:
 
 ```ts
-import { ToolLoopAgent, InferAgentUIMessage } from 'ai';
+import { ToolLoopAgent, InferAgentUIMessage } from "ai"
 
 const myAgent = new ToolLoopAgent({
   // ... configuration
-});
+})
 
 // Infer the UIMessage type for UI components or persistence
-export type MyAgentUIMessage = InferAgentUIMessage<typeof myAgent>;
+export type MyAgentUIMessage = InferAgentUIMessage<typeof myAgent>
 ```
 
 Use this type in your client components with `useChat`:
 
 ```tsx filename="components/chat.tsx"
-'use client';
+"use client"
 
-import { useChat } from '@ai-sdk/react';
-import type { MyAgentUIMessage } from '@/agent/my-agent';
+import { useChat } from "@ai-sdk/react"
+import type { MyAgentUIMessage } from "@/agent/my-agent"
 
 export function Chat() {
-  const { messages } = useChat<MyAgentUIMessage>();
+  const { messages } = useChat<MyAgentUIMessage>()
   // Full type safety for your messages and tools
 }
 ```
