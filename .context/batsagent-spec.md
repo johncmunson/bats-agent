@@ -117,7 +117,11 @@ export interface PlanStep {
   status: PlanStepStatus
   readonly parentId?: string
   resourceUsage: Partial<Record<ToolName, number>>
-  notes?: string
+  /**
+   * Append-only execution trace for this plan step.
+   * Paper-faithful: the checklist is never overwritten; completed/failed/partial steps remain as history.
+   */
+  notesLog?: string[]
 }
 
 export interface ConstraintAnalysis {
@@ -224,16 +228,51 @@ The agent communicates intent through a structured control schema embedded in it
 ```ts
 import { z } from "zod"
 
+/**
+ * Paper-faithful planning: the agent maintains a tree-structured checklist (Appendix C.2).
+ *
+ * Therefore we require explicit, structured plan deltas that the orchestrator can apply
+ * deterministically (instead of heuristically parsing free-form text).
+ */
+export const PlanStepIdSchema = z.string().describe(
+  'Tree-structured step id: "1", "1.2", "1.2.1", ...'
+)
+
+export const PlanDeltaSchema = z.object({
+  /**
+   * Add new nodes (branches/leads) to the checklist.
+   * Paper-faithful: never delete steps; instead add new branches and mark old ones failed/partial.
+   */
+  addSteps: z.array(z.object({
+    id: PlanStepIdSchema,
+    parentId: PlanStepIdSchema.optional(),
+    description: z.string(),
+    status: z.enum(["pending", "partial", "done", "failed"]).default("pending"),
+    noteAppend: z.string().optional(),
+  })).optional(),
+
+  /**
+   * Update existing nodes.
+   * Paper-faithful: append-only notes; status/resource usage may change, but steps are never removed.
+   */
+  updateSteps: z.array(z.object({
+    id: PlanStepIdSchema,
+    status: z.enum(["pending", "partial", "done", "failed"]).optional(),
+    noteAppend: z.string().optional(),
+  })).optional(),
+}).optional()
+
 export const AgentControlSchema = z.discriminatedUnion("type", [
   // Agent wants to execute tool calls
   z.object({
     type: z.literal("TOOL_CALLS"),
     reasoning: z.string(),
-    planUpdate: z.array(z.object({
-      id: z.string(),
-      status: z.enum(["pending", "partial", "done", "failed"]),
-      notes: z.string().optional(),
-    })).optional(),
+    /**
+     * Paper-faithful attribution: the agent must indicate which plan step it is currently executing.
+     * The orchestrator will attribute tool usage in this iteration to `activeStepId`.
+     */
+    activeStepId: PlanStepIdSchema.optional(),
+    planDelta: PlanDeltaSchema,
   }),
 
   // Agent proposes a final answer for verification
@@ -242,12 +281,14 @@ export const AgentControlSchema = z.discriminatedUnion("type", [
     answer: z.string(),
     confidence: z.enum(["high", "medium", "low"]),
     reasoning: z.string(),
+    planDelta: PlanDeltaSchema,
   }),
 
   // Agent requests more thinking without tool calls
   z.object({
     type: z.literal("THINK_ONLY"),
     reasoning: z.string(),
+    planDelta: PlanDeltaSchema,
   }),
 ])
 
@@ -680,6 +721,7 @@ export class Planner {
         description: `Explore: ${constraint}`,
         status: "pending",
         resourceUsage: {},
+        notesLog: [],
       })
     })
   }
@@ -700,7 +742,8 @@ export class Planner {
     update: {
       status?: PlanStepStatus
       resourceUsageDelta?: Partial<Record<ToolName, number>>
-      notes?: string
+      /** Append-only note line. */
+      noteAppend?: string
     }
   ): void {
     const step = this.steps.get(stepId)
@@ -717,8 +760,9 @@ export class Planner {
           (step.resourceUsage[tool as ToolName] ?? 0) + delta
       }
     }
-    if (update.notes) {
-      step.notes = update.notes
+    if (update.noteAppend) {
+      step.notesLog ??= []
+      step.notesLog.push(update.noteAppend)
     }
   }
 
@@ -727,14 +771,30 @@ export class Planner {
     if (this.steps.has(step.id)) {
       throw new Error(`Step ${step.id} already exists`)
     }
+    // Paper-faithful checklist invariants:
+    // - Tree-structured IDs: "1", "1.2", "1.2.1", ...
+    // - If a step has a dot, its parent must exist (unless explicitly provided via parentId and added earlier).
+    // - Steps are append-only: never removed, never edited (except status/resourceUsage/notesLog append).
+    if (step.id.includes(".") && !step.parentId) {
+      const parentId = step.id.split(".").slice(0, -1).join(".")
+      if (!this.steps.has(parentId)) {
+        throw new Error(`Parent step ${parentId} must exist before adding child ${step.id}`)
+      }
+    }
     this.steps.set(step.id, { ...step })
   }
 
   /** Format plan for injection into prompts */
   formatForPrompt(): string {
     const lines: string[] = ["<plan>"]
-    
-    for (const step of this.steps.values()) {
+
+    // Paper-faithful: render as a tree-structured checklist (not a flat list).
+    // Indentation is derived from hierarchical id depth ("1.2.1" => depth 3).
+    const stepsSorted = Array.from(this.steps.values()).sort((a, b) =>
+      a.id.localeCompare(b.id, undefined, { numeric: true })
+    )
+
+    for (const step of stepsSorted) {
       const statusIcon = {
         pending: "[ ]",
         partial: "[~]",
@@ -746,11 +806,17 @@ export class Planner {
         .filter(([_, v]) => v > 0)
         .map(([k, v]) => `${k}=${v}`)
         .join(", ")
-      
+
+      const depth = step.id.split(".").length
+      const indent = "  ".repeat(Math.max(0, depth - 1))
+      const notesSuffix = (step.notesLog?.length ?? 0) > 0
+        ? ` — ${step.notesLog!.at(-1)}`
+        : ""
+
       lines.push(
-        `${statusIcon} ${step.id}: ${step.description}` +
+        `${indent}${statusIcon} ${step.id}: ${step.description}` +
         (usage ? ` (${usage})` : "") +
-        (step.notes ? ` — ${step.notes}` : "")
+        notesSuffix
       )
     }
     
@@ -1196,6 +1262,56 @@ async function runAttempt(
     }
   }
 
+  function computeToolUsageDeltaFromStep(step: GenerateTextResult): Partial<Record<ToolName, number>> {
+    // Paper-faithful logging: "Log resource usage after execution: (Query=#, URL=#)".
+    // IMPORTANT: budget semantics are per-STRING (not per tool invocation):
+    // - search: each string in `queries` consumes 1 unit (SearchToolOutput.queriesUsed)
+    // - browse: each string in `urls` consumes 1 unit (BrowseToolOutput.urlsUsed)
+    const delta: Partial<Record<ToolName, number>> = {}
+    for (const tr of step.toolResults ?? []) {
+      const tool = tr.toolName as ToolName
+      const result: any = tr.result
+
+      if (tool === "search") {
+        const used = typeof result?.queriesUsed === "number" ? result.queriesUsed : 1
+        delta.search = (delta.search ?? 0) + used
+        continue
+      }
+
+      if (tool === "browse") {
+        const used = typeof result?.urlsUsed === "number" ? result.urlsUsed : 1
+        delta.browse = (delta.browse ?? 0) + used
+        continue
+      }
+
+      // Fallback: count one unit if a new tool is added without explicit "units used" metadata.
+      delta[tool] = (delta[tool] ?? 0) + 1
+    }
+    return delta
+  }
+
+  function applyPlanDelta(planner: Planner, delta: AgentControl["planDelta"]): void {
+    if (!delta) return
+
+    for (const s of delta.addSteps ?? []) {
+      planner.addStep({
+        id: s.id,
+        description: s.description,
+        status: s.status ?? "pending",
+        parentId: s.parentId,
+        resourceUsage: {},
+        notesLog: s.noteAppend ? [s.noteAppend] : [],
+      })
+    }
+
+    for (const u of delta.updateSteps ?? []) {
+      planner.update(u.id, {
+        status: u.status,
+        noteAppend: u.noteAppend,
+      })
+    }
+  }
+
   const state: AttemptState = {
     trajectory: [],
     latestToolResult: null,
@@ -1227,6 +1343,26 @@ async function runAttempt(
 
     // Parse agent control signal
     const control = parseAgentControl(result.text)
+
+    // Paper-faithful: apply structured plan deltas every iteration.
+    // This is what makes the checklist "maintained throughout execution".
+    if (control?.planDelta) {
+      applyPlanDelta(context.planner, control.planDelta)
+    }
+
+    // Paper-faithful: attribute tool usage in this iteration to the active plan step.
+    // If tool usage happened but the agent did not specify activeStepId, treat it as a protocol error
+    // (otherwise per-step resource accounting becomes unenforceable and the plan degrades into a flat narrative).
+    const toolUsageDelta = computeToolUsageDeltaFromStep(result)
+    const usedAnyTools = Object.values(toolUsageDelta).some(v => (v ?? 0) > 0)
+    if (usedAnyTools) {
+      const activeStepId =
+        control?.type === "TOOL_CALLS" ? control.activeStepId : undefined
+      if (!activeStepId) {
+        throw new Error("Agent used tools but did not provide activeStepId in TOOL_CALLS control")
+      }
+      context.planner.update(activeStepId, { resourceUsageDelta: toolUsageDelta })
+    }
     
     if (control?.type === "PROPOSE_ANSWER") {
       // Run verification
@@ -1297,7 +1433,6 @@ async function runBATSLoop(
   globalPolicy: GlobalPolicy
 ): Promise<string> {
   const budgetTracker = new BudgetTracker(settings.budget)
-  const planner = new Planner()
   const verifier = new Verifier(settings.model)
   const judgeModel = settings.judgeModel ?? settings.model
   
@@ -1311,11 +1446,15 @@ async function runBATSLoop(
 
   // Initialize constraints from question
   const constraints = await analyzeConstraints(settings.model, question)
-  planner.initialize(question, constraints)
 
   while (budgetTracker.hasRemaining()) {
     attemptNumber++
     settings.onAttemptStart?.(attemptNumber, budgetTracker.getSnapshot())
+
+    // Paper-faithful: each attempt maintains its own checklist plan.
+    // Cross-attempt learning occurs via verifier summaries (previousSummaries) injected into the prompt.
+    const planner = new Planner()
+    planner.initialize(question, constraints)
 
     const context: BATSContext = {
       budgetTracker,
@@ -1574,6 +1713,27 @@ End each response with a JSON control block:
 {
   "type": "TOOL_CALLS" | "PROPOSE_ANSWER" | "THINK_ONLY",
   "reasoning": "Your reasoning for this action",
+  // For TOOL_CALLS:
+  "activeStepId": "1.2.1",
+  // Optional but strongly encouraged in ALL response types:
+  "planDelta": {
+    "addSteps": [
+      {
+        "id": "1.2",
+        "parentId": "1",
+        "description": "New branch / candidate lead ...",
+        "status": "pending",
+        "noteAppend": "Why this branch was created"
+      }
+    ],
+    "updateSteps": [
+      {
+        "id": "1",
+        "status": "partial",
+        "noteAppend": "What changed this iteration"
+      }
+    ]
+  },
   // For PROPOSE_ANSWER:
   "answer": "Your proposed answer",
   "confidence": "high" | "medium" | "low"
@@ -1587,6 +1747,13 @@ Questions contain two types of constraints:
 - **Verification**: Narrow, specific details for confirming candidates
 
 Always start with exploration, then verify.
+
+Maintain an explicit tree-structured checklist plan throughout execution (paper Appendix C.2):
+- Use step ids like "1", "1.2", "1.2.1" to represent branches / alternative leads.
+- Mark each step status: pending [ ], partial [~], done [x], failed [!].
+- Log per-step resource usage after execution: (search=#, browse=#).
+- Never delete or overwrite steps; preserve the trace by adding new branches and marking old ones failed/partial.
+- If you use any tools in an iteration, you MUST set "activeStepId" so the orchestrator can attribute tool usage to the checklist step.
 
 ## Previous Attempts
 
