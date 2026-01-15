@@ -758,18 +758,17 @@ export class Planner {
     return lines.join("\n")
   }
 
-  /** Restore plan from a trajectory summary (for CONTINUE/PIVOT) */
-  restoreFromSummary(summary: TrajectorySummary): void {
-    // Mark all existing steps based on summary
-    // This allows the new attempt to avoid repeated work
-    for (const step of this.steps.values()) {
-      if (summary.keyFindings.some(f => 
-        f.toLowerCase().includes(step.description.toLowerCase())
-      )) {
-        step.status = "done"
-      }
-    }
-  }
+  /**
+   * Paper-faithful note on cross-attempt learning:
+   *
+   * BATS preserves lessons via verifier-produced trajectory summaries that are
+   * injected into later prompts. Do NOT heuristically mutate plan steps from
+   * free-form summary text (it is brittle and can silently corrupt the plan).
+   *
+   * If you want deterministic plan carry-over, extend the verifier schema to
+   * emit explicit plan step deltas (id/status/notes) and apply them here.
+   * Otherwise, keep cross-attempt learning prompt-only via `previousSummaries`.
+   */
 }
 ```
 
@@ -882,18 +881,19 @@ export class Verifier {
       }
     }
 
-    // If CONTINUE but insufficient budget, force PIVOT
-    if (result.decision === "CONTINUE") {
-      // Paper-faithful: the run terminates once ANY tool budget is exhausted.
-      // Therefore, "CONTINUE" is only meaningful if we can still run (both budgets > 0).
-      const hasMinimalBudget =
-        budget.remaining.search >= 1 && budget.remaining.browse >= 1
-      if (!hasMinimalBudget) {
-        return {
-          ...result,
-          decision: "PIVOT",
-          justification: `${result.justification} [Forced PIVOT: insufficient budget to continue]`,
-        }
+    // Paper-faithful termination semantics:
+    // The full BATS loop terminates once ANY tool budget is exhausted.
+    // If the verifier returns CONTINUE but execution can no longer proceed, coerce to PIVOT
+    // (the orchestrator will terminate immediately due to budget exhaustion).
+    const isAnyExhausted =
+      budget.remaining.search <= 0 || budget.remaining.browse <= 0
+    if (isAnyExhausted && result.decision === "CONTINUE") {
+      return {
+        ...result,
+        decision: "PIVOT",
+        justification:
+          `${result.justification} ` +
+          `[Coerced PIVOT: budget exhausted; execution must terminate under paper semantics]`,
       }
     }
 
@@ -1149,7 +1149,7 @@ async function runAttempt(
   }
 ): Promise<AttemptResult> {
   type LatestToolResult =
-    | { toolName: ToolName; output: unknown; at: number }
+    | { toolName: ToolName; output: unknown }
     | null
 
   interface AttemptState {
@@ -1164,7 +1164,11 @@ async function runAttempt(
     return [
       ...state.trajectory.map(t => ({ role: "assistant", content: t })),
       ...(state.latestToolResult
-        ? [{ role: "tool", content: JSON.stringify(state.latestToolResult) }]
+        ? [
+            // Paper-faithful eviction invariant: include ONLY the most recent tool output.
+            // Keep the payload as close to the tool's native output as possible.
+            { role: "tool", content: JSON.stringify(state.latestToolResult) },
+          ]
         : []),
     ]
   }
@@ -1188,7 +1192,6 @@ async function runAttempt(
       state.latestToolResult = {
         toolName: lastToolResult.toolName,
         output: lastToolResult.result,
-        at: Date.now(),
       }
     }
   }
@@ -1296,6 +1299,7 @@ async function runBATSLoop(
   const budgetTracker = new BudgetTracker(settings.budget)
   const planner = new Planner()
   const verifier = new Verifier(settings.model)
+  const judgeModel = settings.judgeModel ?? settings.model
   
   const verifiedAnswers: Array<{
     answer: string
@@ -1350,7 +1354,8 @@ async function runBATSLoop(
 
     if (result.summary) {
       summaries.push(result.summary)
-      planner.restoreFromSummary(result.summary)
+      // Paper-faithful: cross-attempt learning occurs via `previousSummaries` injected
+      // into the prompt, not by heuristic plan mutation.
     }
 
     if (result.status === "BUDGET_EXHAUSTED") {
@@ -1363,7 +1368,7 @@ async function runBATSLoop(
     throw new Error("No verified answer found within budget")
   }
 
-  return selectBestAnswer(settings.model, verifiedAnswers, question)
+  return selectBestAnswer(judgeModel, verifiedAnswers, question)
 }
 ```
 
@@ -1611,7 +1616,7 @@ Return as JSON:
 
 ```ts
 async function selectBestAnswer(
-  model: LanguageModel,
+  judgeModel: LanguageModel,
   candidates: Array<{ answer: string; verification: VerificationResult }>,
   question: string
 ): Promise<string> {
@@ -1619,9 +1624,10 @@ async function selectBestAnswer(
     return candidates[0].answer
   }
 
-  // Use majority vote for multiple candidates
+  // Paper-faithful: use an LLM-as-a-judge to select the BEST verified answer
+  // among candidates (best-of), not majority vote aggregation.
   const { object } = await generateObject({
-    model,
+    model: judgeModel,
     schema: z.object({
       selectedIndex: z.number(),
       reasoning: z.string(),
@@ -1631,14 +1637,15 @@ async function selectBestAnswer(
 ${question}
 
 ## Candidate Answers
-${candidates.map((c, i) => `${i + 1}. ${c.answer} (confidence: ${c.verification.justification})`).join("\n")}
+${candidates.map((c, i) => `${i + 1}. ${c.answer} (verification: ${c.verification.justification})`).join("\n")}
 
 ## Task
-Select the answer that best represents the majority consensus or is most likely correct.
-Consider verification confidence and constraint satisfaction.`,
+Select the single best answer (most likely factually correct and most specific to the question).
+Do NOT perform majority vote. Do NOT select based on writing quality.`,
   })
 
-  return candidates[object.selectedIndex].answer
+  const idx = Math.max(0, Math.min(candidates.length - 1, Math.floor(object.selectedIndex)))
+  return candidates[idx].answer
 }
 ```
 
