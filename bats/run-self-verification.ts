@@ -2,14 +2,14 @@ import { generateText, Output } from "ai"
 import { z } from "zod"
 
 // TODO: Update budgetStatus and trajectory to be more structured.
-type StrategicVerificationInput = {
+type SelfVerificationInput = {
   question: string
   trajectory: string
   currentAnswer: string
   budgetStatus: string
 }
 
-const strategicVerificationSchema = z.object({
+const selfVerificationSchema = z.object({
   verification: z
     .array(
       z.object({
@@ -78,14 +78,14 @@ const strategicVerificationSchema = z.object({
     ),
 })
 
-type StrategicVerificationOutput = z.infer<typeof strategicVerificationSchema>
+type SelfVerificationOutput = z.infer<typeof selfVerificationSchema>
 
 export async function runStrategicVerification({
   question,
   trajectory,
   currentAnswer,
   budgetStatus,
-}: StrategicVerificationInput): Promise<StrategicVerificationOutput> {
+}: SelfVerificationInput): Promise<SelfVerificationOutput> {
   const prompt = `You are an AI Strategic Verifier. Your primary goal is to evaluate a proposed answer, assess the viability of the current problem-solving plan, and decide the best course of action: declare success, continue with the current plan, or pivot to a new one.
 
 ### Given Inputs
@@ -157,7 +157,7 @@ ${budgetStatus}
       name: "StrategicVerificationResult",
       description:
         "Structured evaluation of an agent trajectory, including verification, strategic decision, and next-step guidance.",
-      schema: strategicVerificationSchema,
+      schema: selfVerificationSchema,
     }),
   })
 
