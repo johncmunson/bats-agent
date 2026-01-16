@@ -2,7 +2,7 @@ import { generateText, Output } from "ai"
 import { z } from "zod"
 import { type BudgetStatus } from "./types"
 
-// TODO: Update budgetStatus and trajectory to be more structured.
+// TODO: Update trajectory to be more structured.
 type SelfVerificationInput = {
   question: string
   trajectory: string
