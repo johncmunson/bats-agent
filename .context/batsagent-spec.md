@@ -47,22 +47,30 @@ import type {
   ToolSet,
 } from "ai"
 
-export class BATSAgent<
-  TOOLS extends ToolSet = BATSToolSet,
-> implements Agent<BATSCallOptions, TOOLS, never> {
+export class BATSAgent<TOOLS extends ToolSet = BATSToolSet> implements Agent<
+  BATSCallOptions,
+  TOOLS,
+  never
+> {
   readonly version = "agent-v1"
   readonly id: string | undefined
   readonly tools: TOOLS
 
-  constructor(settings: BATSAgentSettings<TOOLS>) { /* ... */ }
+  constructor(settings: BATSAgentSettings<TOOLS>) {
+    /* ... */
+  }
 
   async generate(
-    options: AgentCallParameters<BATSCallOptions>
-  ): Promise<GenerateTextResult<TOOLS, never>> { /* ... */ }
+    options: AgentCallParameters<BATSCallOptions>,
+  ): Promise<GenerateTextResult<TOOLS, never>> {
+    /* ... */
+  }
 
   async stream(
-    options: AgentCallParameters<BATSCallOptions>
-  ): Promise<StreamTextResult<TOOLS, never>> { /* ... */ }
+    options: AgentCallParameters<BATSCallOptions>,
+  ): Promise<StreamTextResult<TOOLS, never>> {
+    /* ... */
+  }
 }
 ```
 
@@ -234,33 +242,45 @@ import { z } from "zod"
  * Therefore we require explicit, structured plan deltas that the orchestrator can apply
  * deterministically (instead of heuristically parsing free-form text).
  */
-export const PlanStepIdSchema = z.string().describe(
-  'Tree-structured step id: "1", "1.2", "1.2.1", ...'
-)
+export const PlanStepIdSchema = z
+  .string()
+  .describe('Tree-structured step id: "1", "1.2", "1.2.1", ...')
 
-export const PlanDeltaSchema = z.object({
-  /**
-   * Add new nodes (branches/leads) to the checklist.
-   * Paper-faithful: never delete steps; instead add new branches and mark old ones failed/partial.
-   */
-  addSteps: z.array(z.object({
-    id: PlanStepIdSchema,
-    parentId: PlanStepIdSchema.optional(),
-    description: z.string(),
-    status: z.enum(["pending", "partial", "done", "failed"]).default("pending"),
-    noteAppend: z.string().optional(),
-  })).optional(),
+export const PlanDeltaSchema = z
+  .object({
+    /**
+     * Add new nodes (branches/leads) to the checklist.
+     * Paper-faithful: never delete steps; instead add new branches and mark old ones failed/partial.
+     */
+    addSteps: z
+      .array(
+        z.object({
+          id: PlanStepIdSchema,
+          parentId: PlanStepIdSchema.optional(),
+          description: z.string(),
+          status: z
+            .enum(["pending", "partial", "done", "failed"])
+            .default("pending"),
+          noteAppend: z.string().optional(),
+        }),
+      )
+      .optional(),
 
-  /**
-   * Update existing nodes.
-   * Paper-faithful: append-only notes; status/resource usage may change, but steps are never removed.
-   */
-  updateSteps: z.array(z.object({
-    id: PlanStepIdSchema,
-    status: z.enum(["pending", "partial", "done", "failed"]).optional(),
-    noteAppend: z.string().optional(),
-  })).optional(),
-}).optional()
+    /**
+     * Update existing nodes.
+     * Paper-faithful: append-only notes; status/resource usage may change, but steps are never removed.
+     */
+    updateSteps: z
+      .array(
+        z.object({
+          id: PlanStepIdSchema,
+          status: z.enum(["pending", "partial", "done", "failed"]).optional(),
+          noteAppend: z.string().optional(),
+        }),
+      )
+      .optional(),
+  })
+  .optional()
 
 export const AgentControlSchema = z.discriminatedUnion("type", [
   // Agent wants to execute tool calls
@@ -297,7 +317,7 @@ export type AgentControl = z.infer<typeof AgentControlSchema>
 
 ### 4.2 Detection Logic
 
-```ts
+````ts
 function parseAgentControl(response: string): AgentControl | null {
   // Look for JSON block in response
   const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/)
@@ -310,7 +330,7 @@ function parseAgentControl(response: string): AgentControl | null {
     return null
   }
 }
-```
+````
 
 ---
 
@@ -323,9 +343,13 @@ import { tool } from "ai"
 import { z } from "zod"
 
 export const searchInputSchema = z.object({
-  queries: z.array(z.string()).min(1).max(5).describe(
-    "Array of search queries. Include multiple complementary queries in a single call. Budget: each string consumes 1 unit of search budget."
-  ),
+  queries: z
+    .array(z.string())
+    .min(1)
+    .max(5)
+    .describe(
+      "Array of search queries. Include multiple complementary queries in a single call. Budget: each string consumes 1 unit of search budget.",
+    ),
 })
 
 export interface SearchResult {
@@ -344,8 +368,9 @@ export const createSearchTool = (config: {
   apiKey: string
   searchEngineId: string
   resultsPerQuery?: number // default: 10
-}) => tool({
-  description: `Performs batched web searches. Supply an array of queries; returns top results for each.
+}) =>
+  tool({
+    description: `Performs batched web searches. Supply an array of queries; returns top results for each.
   
 Budget guidance:
 - HIGH budget: Use 3-5 diverse queries per call
@@ -353,58 +378,62 @@ Budget guidance:
 - LOW budget: Use 1-2 focused queries per call
 - CRITICAL budget: Use only 1 essential query`,
 
-  inputSchema: searchInputSchema,
+    inputSchema: searchInputSchema,
 
-  execute: async ({ queries }, { experimental_context }) => {
-    const ctx = experimental_context as BATSContext
-    const snapshot = ctx.budgetTracker.getSnapshot()
-    
-    // Check budget before execution
-    // Budget semantics: each string in `queries` consumes 1 unit of search budget.
-    if (snapshot.remaining.search < queries.length) {
-      throw new Error(
-        `Insufficient search budget: need ${queries.length}, have ${snapshot.remaining.search}`
-      )
-    }
+    execute: async ({ queries }, { experimental_context }) => {
+      const ctx = experimental_context as BATSContext
+      const snapshot = ctx.budgetTracker.getSnapshot()
 
-    const results: Record<string, SearchResult[]> = {}
-    
-    for (const query of queries) {
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?` +
-        `key=${config.apiKey}&cx=${config.searchEngineId}&q=${encodeURIComponent(query)}&num=${config.resultsPerQuery ?? 10}`
-      )
-      
-      const data = await response.json()
-      results[query] = (data.items ?? []).map((item: any) => ({
-        title: item.title,
-        snippet: item.snippet,
-        url: item.link,
-        displayLink: item.displayLink,
-      }))
-      
-      // Consume budget
-      ctx.budgetTracker.consume("search", 1)
-    }
+      // Check budget before execution
+      // Budget semantics: each string in `queries` consumes 1 unit of search budget.
+      if (snapshot.remaining.search < queries.length) {
+        throw new Error(
+          `Insufficient search budget: need ${queries.length}, have ${snapshot.remaining.search}`,
+        )
+      }
 
-    return {
-      results,
-      queriesUsed: queries.length,
-    } satisfies SearchToolOutput
-  },
-})
+      const results: Record<string, SearchResult[]> = {}
+
+      for (const query of queries) {
+        const response = await fetch(
+          `https://www.googleapis.com/customsearch/v1?` +
+            `key=${config.apiKey}&cx=${config.searchEngineId}&q=${encodeURIComponent(query)}&num=${config.resultsPerQuery ?? 10}`,
+        )
+
+        const data = await response.json()
+        results[query] = (data.items ?? []).map((item: any) => ({
+          title: item.title,
+          snippet: item.snippet,
+          url: item.link,
+          displayLink: item.displayLink,
+        }))
+
+        // Consume budget
+        ctx.budgetTracker.consume("search", 1)
+      }
+
+      return {
+        results,
+        queriesUsed: queries.length,
+      } satisfies SearchToolOutput
+    },
+  })
 ```
 
 ### 5.2 Browse Tool Interface
 
 ```ts
 export const browseInputSchema = z.object({
-  urls: z.array(z.string().url()).min(1).max(3).describe(
-    "URLs to fetch and extract content from. Budget: each string consumes 1 unit of browse budget."
-  ),
-  goal: z.string().describe(
-    "The specific information goal for browsing these pages"
-  ),
+  urls: z
+    .array(z.string().url())
+    .min(1)
+    .max(3)
+    .describe(
+      "URLs to fetch and extract content from. Budget: each string consumes 1 unit of browse budget.",
+    ),
+  goal: z
+    .string()
+    .describe("The specific information goal for browsing these pages"),
 })
 
 export interface BrowseResult {
@@ -427,8 +456,9 @@ export interface BrowseToolOutput {
 export const createJinaBrowseTool = (config: {
   apiKey?: string
   contentLimit?: number // default: 150000
-}) => tool({
-  description: `Fetches and extracts content from webpages using Jina.ai Reader.
+}) =>
+  tool({
+    description: `Fetches and extracts content from webpages using Jina.ai Reader.
 
 Budget guidance:
 - HIGH budget: Browse up to 3 high-value URLs
@@ -436,73 +466,73 @@ Budget guidance:
 - LOW budget: Browse at most 1 most promising URL
 - CRITICAL budget: Avoid browsing unless absolutely essential`,
 
-  inputSchema: browseInputSchema,
+    inputSchema: browseInputSchema,
 
-  execute: async ({ urls, goal }, { experimental_context }) => {
-    const ctx = experimental_context as BATSContext
-    const contentLimit = config.contentLimit ?? 150000
-    const snapshot = ctx.budgetTracker.getSnapshot()
+    execute: async ({ urls, goal }, { experimental_context }) => {
+      const ctx = experimental_context as BATSContext
+      const contentLimit = config.contentLimit ?? 150000
+      const snapshot = ctx.budgetTracker.getSnapshot()
 
-    // Check budget before execution
-    // Budget semantics: each string in `urls` consumes 1 unit of browse budget.
-    if (snapshot.remaining.browse < urls.length) {
-      throw new Error(
-        `Insufficient browse budget: need ${urls.length}, have ${snapshot.remaining.browse}`
-      )
-    }
+      // Check budget before execution
+      // Budget semantics: each string in `urls` consumes 1 unit of browse budget.
+      if (snapshot.remaining.browse < urls.length) {
+        throw new Error(
+          `Insufficient browse budget: need ${urls.length}, have ${snapshot.remaining.browse}`,
+        )
+      }
 
-    const results: BrowseResult[] = []
+      const results: BrowseResult[] = []
 
-    for (const url of urls) {
-      try {
-        const response = await fetch(`https://r.jina.ai/${url}`, {
-          headers: config.apiKey 
-            ? { Authorization: `Bearer ${config.apiKey}` }
-            : {},
-        })
+      for (const url of urls) {
+        try {
+          const response = await fetch(`https://r.jina.ai/${url}`, {
+            headers: config.apiKey
+              ? { Authorization: `Bearer ${config.apiKey}` }
+              : {},
+          })
 
-        if (!response.ok) {
+          if (!response.ok) {
+            results.push({
+              url,
+              content: "",
+              contentTruncated: false,
+              error: `HTTP ${response.status}: ${response.statusText}`,
+            })
+            continue
+          }
+
+          let content = await response.text()
+          const originalLength = content.length
+
+          // TRUNCATION: Mechanical cutoff, not semantic
+          if (content.length > contentLimit) {
+            content = content.slice(0, contentLimit)
+          }
+
+          results.push({
+            url,
+            content,
+            contentTruncated: originalLength > contentLimit,
+          })
+
+          // Consume budget
+          ctx.budgetTracker.consume("browse", 1)
+        } catch (error) {
           results.push({
             url,
             content: "",
             contentTruncated: false,
-            error: `HTTP ${response.status}: ${response.statusText}`,
+            error: error instanceof Error ? error.message : "Unknown error",
           })
-          continue
         }
-
-        let content = await response.text()
-        const originalLength = content.length
-        
-        // TRUNCATION: Mechanical cutoff, not semantic
-        if (content.length > contentLimit) {
-          content = content.slice(0, contentLimit)
-        }
-
-        results.push({
-          url,
-          content,
-          contentTruncated: originalLength > contentLimit,
-        })
-
-        // Consume budget
-        ctx.budgetTracker.consume("browse", 1)
-      } catch (error) {
-        results.push({
-          url,
-          content: "",
-          contentTruncated: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        })
       }
-    }
 
-    return {
-      results,
-      urlsUsed: urls.length,
-    } satisfies BrowseToolOutput
-  },
-})
+      return {
+        results,
+        urlsUsed: urls.length,
+      } satisfies BrowseToolOutput
+    },
+  })
 ```
 
 ### 5.4 Browse Tool: Crawl4AI Implementation
@@ -511,8 +541,9 @@ Budget guidance:
 export const createCrawl4AIBrowseTool = (config: {
   baseUrl: string // Crawl4AI server URL
   contentLimit?: number // default: 150000
-}) => tool({
-  description: `Fetches and extracts content from webpages using Crawl4AI.
+}) =>
+  tool({
+    description: `Fetches and extracts content from webpages using Crawl4AI.
 
 Budget guidance:
 - HIGH budget: Browse up to 3 high-value URLs
@@ -520,79 +551,79 @@ Budget guidance:
 - LOW budget: Browse at most 1 most promising URL
 - CRITICAL budget: Avoid browsing unless absolutely essential`,
 
-  inputSchema: browseInputSchema,
+    inputSchema: browseInputSchema,
 
-  execute: async ({ urls, goal }, { experimental_context }) => {
-    const ctx = experimental_context as BATSContext
-    const contentLimit = config.contentLimit ?? 150000
-    const snapshot = ctx.budgetTracker.getSnapshot()
+    execute: async ({ urls, goal }, { experimental_context }) => {
+      const ctx = experimental_context as BATSContext
+      const contentLimit = config.contentLimit ?? 150000
+      const snapshot = ctx.budgetTracker.getSnapshot()
 
-    // Check budget before execution
-    // Budget semantics: each string in `urls` consumes 1 unit of browse budget.
-    if (snapshot.remaining.browse < urls.length) {
-      throw new Error(
-        `Insufficient browse budget: need ${urls.length}, have ${snapshot.remaining.browse}`
-      )
-    }
+      // Check budget before execution
+      // Budget semantics: each string in `urls` consumes 1 unit of browse budget.
+      if (snapshot.remaining.browse < urls.length) {
+        throw new Error(
+          `Insufficient browse budget: need ${urls.length}, have ${snapshot.remaining.browse}`,
+        )
+      }
 
-    const results: BrowseResult[] = []
+      const results: BrowseResult[] = []
 
-    for (const url of urls) {
-      try {
-        const response = await fetch(`${config.baseUrl}/crawl`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            urls: [url],
-            word_count_threshold: 10,
-            extraction_strategy: "markdown",
-          }),
-        })
+      for (const url of urls) {
+        try {
+          const response = await fetch(`${config.baseUrl}/crawl`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              urls: [url],
+              word_count_threshold: 10,
+              extraction_strategy: "markdown",
+            }),
+          })
 
-        if (!response.ok) {
+          if (!response.ok) {
+            results.push({
+              url,
+              content: "",
+              contentTruncated: false,
+              error: `HTTP ${response.status}: ${response.statusText}`,
+            })
+            continue
+          }
+
+          const data = await response.json()
+          let content = data.results?.[0]?.markdown ?? ""
+          const originalLength = content.length
+
+          // TRUNCATION: Mechanical cutoff, not semantic
+          if (content.length > contentLimit) {
+            content = content.slice(0, contentLimit)
+          }
+
+          results.push({
+            url,
+            title: data.results?.[0]?.title,
+            content,
+            contentTruncated: originalLength > contentLimit,
+          })
+
+          // Consume budget
+          ctx.budgetTracker.consume("browse", 1)
+        } catch (error) {
           results.push({
             url,
             content: "",
             contentTruncated: false,
-            error: `HTTP ${response.status}: ${response.statusText}`,
+            error: error instanceof Error ? error.message : "Unknown error",
           })
-          continue
         }
-
-        const data = await response.json()
-        let content = data.results?.[0]?.markdown ?? ""
-        const originalLength = content.length
-
-        // TRUNCATION: Mechanical cutoff, not semantic
-        if (content.length > contentLimit) {
-          content = content.slice(0, contentLimit)
-        }
-
-        results.push({
-          url,
-          title: data.results?.[0]?.title,
-          content,
-          contentTruncated: originalLength > contentLimit,
-        })
-
-        // Consume budget
-        ctx.budgetTracker.consume("browse", 1)
-      } catch (error) {
-        results.push({
-          url,
-          content: "",
-          contentTruncated: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        })
       }
-    }
 
-    return {
-      results,
-      urlsUsed: urls.length,
-    } satisfies BrowseToolOutput
-  },
-})
+      return {
+        results,
+        urlsUsed: urls.length,
+      } satisfies BrowseToolOutput
+    },
+  })
 ```
 
 ---
@@ -628,7 +659,7 @@ export class BudgetTracker {
     const snapshot = this.getSnapshot()
     const minRatio = Math.min(
       snapshot.remaining.search / snapshot.total.search,
-      snapshot.remaining.browse / snapshot.total.browse
+      snapshot.remaining.browse / snapshot.total.browse,
     )
 
     if (minRatio >= 0.7) return "HIGH"
@@ -692,10 +723,10 @@ export class BudgetExhaustedError extends Error {
   constructor(
     public readonly tool: ToolName,
     public readonly requested: number,
-    public readonly available: number
+    public readonly available: number,
   ) {
     super(
-      `Budget exhausted for ${tool}: requested ${requested}, available ${available}`
+      `Budget exhausted for ${tool}: requested ${requested}, available ${available}`,
     )
     this.name = "BudgetExhaustedError"
   }
@@ -744,7 +775,7 @@ export class Planner {
       resourceUsageDelta?: Partial<Record<ToolName, number>>
       /** Append-only note line. */
       noteAppend?: string
-    }
+    },
   ): void {
     const step = this.steps.get(stepId)
     if (!step) {
@@ -778,7 +809,9 @@ export class Planner {
     if (step.id.includes(".") && !step.parentId) {
       const parentId = step.id.split(".").slice(0, -1).join(".")
       if (!this.steps.has(parentId)) {
-        throw new Error(`Parent step ${parentId} must exist before adding child ${step.id}`)
+        throw new Error(
+          `Parent step ${parentId} must exist before adding child ${step.id}`,
+        )
       }
     }
     this.steps.set(step.id, { ...step })
@@ -791,7 +824,7 @@ export class Planner {
     // Paper-faithful: render as a tree-structured checklist (not a flat list).
     // Indentation is derived from hierarchical id depth ("1.2.1" => depth 3).
     const stepsSorted = Array.from(this.steps.values()).sort((a, b) =>
-      a.id.localeCompare(b.id, undefined, { numeric: true })
+      a.id.localeCompare(b.id, undefined, { numeric: true }),
     )
 
     for (const step of stepsSorted) {
@@ -801,7 +834,7 @@ export class Planner {
         done: "[x]",
         failed: "[!]",
       }[step.status]
-      
+
       const usage = Object.entries(step.resourceUsage)
         .filter(([_, v]) => v > 0)
         .map(([k, v]) => `${k}=${v}`)
@@ -809,17 +842,16 @@ export class Planner {
 
       const depth = step.id.split(".").length
       const indent = "  ".repeat(Math.max(0, depth - 1))
-      const notesSuffix = (step.notesLog?.length ?? 0) > 0
-        ? ` — ${step.notesLog!.at(-1)}`
-        : ""
+      const notesSuffix =
+        (step.notesLog?.length ?? 0) > 0 ? ` — ${step.notesLog!.at(-1)}` : ""
 
       lines.push(
         `${indent}${statusIcon} ${step.id}: ${step.description}` +
-        (usage ? ` (${usage})` : "") +
-        notesSuffix
+          (usage ? ` (${usage})` : "") +
+          notesSuffix,
       )
     }
-    
+
     lines.push("</plan>")
     return lines.join("\n")
   }
@@ -895,7 +927,7 @@ export class Verifier {
       budget: input.budget,
       constraints: input.constraints,
     })
-    
+
     return {
       decision: result.decision,
       checks: result.checks,
@@ -1033,7 +1065,7 @@ Based on verification and budget, choose one:
 2. CONTINUE: Verification failed because some constraints are unverifiable, but:
    - The trajectory is generally sound and failures are correctable
    - Sufficient budget remains to attempt correction
-   
+
 3. PIVOT: Verification failed due to:
    - Fundamental flaw in the approach that cannot be easily fixed
    - Repeated unsuccessful attempts to find certain information
@@ -1061,13 +1093,13 @@ If decision is CONTINUE or PIVOT, provide:
 
 BATS uses two independent context-control mechanisms:
 
-| Aspect         | Tool Truncation         | Trajectory Summarization       |
-| -------------- | ----------------------- | ------------------------------ |
-| Operates on    | Webpage content         | Agent reasoning history        |
-| When           | Immediately after fetch | On CONTINUE / PIVOT / periodic |
-| Who            | Tool adapter            | Verifier                       |
-| Type           | Mechanical cutoff       | Semantic, structured           |
-| Purpose        | Hard context bounds     | Control flow + learning        |
+| Aspect      | Tool Truncation         | Trajectory Summarization       |
+| ----------- | ----------------------- | ------------------------------ |
+| Operates on | Webpage content         | Agent reasoning history        |
+| When        | Immediately after fetch | On CONTINUE / PIVOT / periodic |
+| Who         | Tool adapter            | Verifier                       |
+| Type        | Mechanical cutoff       | Semantic, structured           |
+| Purpose     | Hard context bounds     | Control flow + learning        |
 
 ### 7.2 Tool Truncation
 
@@ -1094,9 +1126,11 @@ Triggered in three cases:
 3. **Periodic safeguard** — After K iterations (default: 10)
 
 ```ts
-type LatestToolResult =
-  | { toolName: ToolName; output: unknown; at: number }
-  | null
+type LatestToolResult = {
+  toolName: ToolName
+  output: unknown
+  at: number
+} | null
 
 interface AttemptState {
   /**
@@ -1115,20 +1149,21 @@ interface AttemptState {
 function shouldSummarize(
   state: AttemptState,
   verificationResult: VerificationResult | null,
-  summarizationInterval: number
+  summarizationInterval: number,
 ): boolean {
   // Verification-triggered summarization
   if (verificationResult?.decision === "CONTINUE") return true
   if (verificationResult?.decision === "PIVOT") return true
-  
+
   // Periodic safeguard
   if (state.iterationsSinceLastSummary >= summarizationInterval) return true
-  
+
   return false
 }
 ```
 
 When summarization occurs:
+
 - **Entire raw trajectory is replaced** with structured summary
 - This is a **destructive replacement**, not an append
 - Verifier produces the summary (it has constraint context)
@@ -1138,16 +1173,19 @@ When summarization occurs:
 In addition to truncation and trajectory summarization, BATS enforces a strict tool-output eviction rule to control context growth (paper Appendix A.2).
 
 At any time, the attempt prompt context must include:
+
 - Plan (checklist + status)
 - Trajectory (reasoning + plan updates + tool-call args only)
 - Verifier summaries (when generated)
 - At most one tool output payload: the most recent tool result
 
 It must NOT include:
+
 - Tool outputs from earlier steps
 - Accumulated browse page content in `trajectory[]`
 
 Implementation pattern (used in Section 9.1):
+
 - Store tool results out-of-band as `latestToolResult`
 - Inject `latestToolResult` as a single `role: "tool"` message (optional)
 
@@ -1159,13 +1197,13 @@ Implementation pattern (used in Section 9.1):
 export interface BATSContext {
   /** Budget tracker instance */
   budgetTracker: BudgetTracker
-  
+
   /** Current attempt number (1-indexed) */
   attemptNumber: number
-  
+
   /** Planner instance */
   planner: Planner
-  
+
   /** Previous trajectory summaries (for cross-attempt learning) */
   previousSummaries: TrajectorySummary[]
 }
@@ -1212,11 +1250,9 @@ async function runAttempt(
     /** Non-paper safety guard to prevent infinite loops / runaway token cost */
     safetyMaxIterationsPerAttempt: number
     onBudgetUpdate?: (budget: BudgetState) => void
-  }
+  },
 ): Promise<AttemptResult> {
-  type LatestToolResult =
-    | { toolName: ToolName; output: unknown }
-    | null
+  type LatestToolResult = { toolName: ToolName; output: unknown } | null
 
   interface AttemptState {
     /** Reasoning + plan updates + tool-call args ONLY. Never include tool outputs. */
@@ -1228,7 +1264,7 @@ async function runAttempt(
 
   function buildAttemptMessages(state: AttemptState) {
     return [
-      ...state.trajectory.map(t => ({ role: "assistant", content: t })),
+      ...state.trajectory.map((t) => ({ role: "assistant", content: t })),
       ...(state.latestToolResult
         ? [
             // Paper-faithful eviction invariant: include ONLY the most recent tool output.
@@ -1245,13 +1281,18 @@ async function runAttempt(
     return step.text
   }
 
-  function getLastToolResult(step: GenerateTextResult): { toolName: ToolName; result: unknown } | null {
+  function getLastToolResult(
+    step: GenerateTextResult,
+  ): { toolName: ToolName; result: unknown } | null {
     const last = step.toolResults?.at(-1)
     if (!last) return null
     return { toolName: last.toolName as ToolName, result: last.result }
   }
 
-  function updateEvictedToolState(state: AttemptState, step: GenerateTextResult) {
+  function updateEvictedToolState(
+    state: AttemptState,
+    step: GenerateTextResult,
+  ) {
     state.trajectory.push(formatStepWithoutToolOutputs(step))
     const lastToolResult = getLastToolResult(step)
     if (lastToolResult) {
@@ -1262,7 +1303,9 @@ async function runAttempt(
     }
   }
 
-  function computeToolUsageDeltaFromStep(step: GenerateTextResult): Partial<Record<ToolName, number>> {
+  function computeToolUsageDeltaFromStep(
+    step: GenerateTextResult,
+  ): Partial<Record<ToolName, number>> {
     // Paper-faithful logging: "Log resource usage after execution: (Query=#, URL=#)".
     // IMPORTANT: budget semantics are per-STRING (not per tool invocation):
     // - search: each string in `queries` consumes 1 unit (SearchToolOutput.queriesUsed)
@@ -1273,7 +1316,8 @@ async function runAttempt(
       const result: any = tr.result
 
       if (tool === "search") {
-        const used = typeof result?.queriesUsed === "number" ? result.queriesUsed : 1
+        const used =
+          typeof result?.queriesUsed === "number" ? result.queriesUsed : 1
         delta.search = (delta.search ?? 0) + used
         continue
       }
@@ -1290,7 +1334,10 @@ async function runAttempt(
     return delta
   }
 
-  function applyPlanDelta(planner: Planner, delta: AgentControl["planDelta"]): void {
+  function applyPlanDelta(
+    planner: Planner,
+    delta: AgentControl["planDelta"],
+  ): void {
     if (!delta) return
 
     for (const s of delta.addSteps ?? []) {
@@ -1322,13 +1369,18 @@ async function runAttempt(
     // Inject budget state into prompt
     const budgetPrompt = context.budgetTracker.formatForPrompt()
     const planPrompt = context.planner.formatForPrompt()
-    
+
     // Generate next step
     const result = await generateText({
       model,
       tools,
       experimental_context: context,
-      system: buildSystemPrompt(question, budgetPrompt, planPrompt, context.previousSummaries),
+      system: buildSystemPrompt(
+        question,
+        budgetPrompt,
+        planPrompt,
+        context.previousSummaries,
+      ),
       messages: buildAttemptMessages(state),
       stopWhen: stepCountIs(1), // Single step at a time for control
     })
@@ -1354,16 +1406,20 @@ async function runAttempt(
     // If tool usage happened but the agent did not specify activeStepId, treat it as a protocol error
     // (otherwise per-step resource accounting becomes unenforceable and the plan degrades into a flat narrative).
     const toolUsageDelta = computeToolUsageDeltaFromStep(result)
-    const usedAnyTools = Object.values(toolUsageDelta).some(v => (v ?? 0) > 0)
+    const usedAnyTools = Object.values(toolUsageDelta).some((v) => (v ?? 0) > 0)
     if (usedAnyTools) {
       const activeStepId =
         control?.type === "TOOL_CALLS" ? control.activeStepId : undefined
       if (!activeStepId) {
-        throw new Error("Agent used tools but did not provide activeStepId in TOOL_CALLS control")
+        throw new Error(
+          "Agent used tools but did not provide activeStepId in TOOL_CALLS control",
+        )
       }
-      context.planner.update(activeStepId, { resourceUsageDelta: toolUsageDelta })
+      context.planner.update(activeStepId, {
+        resourceUsageDelta: toolUsageDelta,
+      })
     }
-    
+
     if (control?.type === "PROPOSE_ANSWER") {
       // Run verification
       const verification = await verifier.verify({
@@ -1430,17 +1486,17 @@ async function runAttempt(
 async function runBATSLoop(
   question: string,
   settings: BATSAgentSettings,
-  globalPolicy: GlobalPolicy
+  globalPolicy: GlobalPolicy,
 ): Promise<string> {
   const budgetTracker = new BudgetTracker(settings.budget)
   const verifier = new Verifier(settings.model)
   const judgeModel = settings.judgeModel ?? settings.model
-  
+
   const verifiedAnswers: Array<{
     answer: string
     verification: VerificationResult
   }> = []
-  
+
   const summaries: TrajectorySummary[] = []
   let attemptNumber = 0
 
@@ -1473,7 +1529,7 @@ async function runBATSLoop(
         summarizationInterval: settings.summarizationInterval ?? 10,
         safetyMaxIterationsPerAttempt: 100,
         onBudgetUpdate: settings.onBudgetUpdate,
-      }
+      },
     )
 
     settings.onAttemptEnd?.(attemptNumber, result)
@@ -1526,9 +1582,9 @@ import {
   type LanguageModel,
 } from "ai"
 
-export class BATSAgent<TOOLS extends BATSToolSet = BATSToolSet>
-  implements Agent<BATSCallOptions, TOOLS, never>
-{
+export class BATSAgent<
+  TOOLS extends BATSToolSet = BATSToolSet,
+> implements Agent<BATSCallOptions, TOOLS, never> {
   readonly version = "agent-v1"
   readonly id: string | undefined
   readonly tools: TOOLS
@@ -1542,16 +1598,21 @@ export class BATSAgent<TOOLS extends BATSToolSet = BATSToolSet>
   }
 
   async generate(
-    options: AgentCallParameters<BATSCallOptions>
+    options: AgentCallParameters<BATSCallOptions>,
   ): Promise<GenerateTextResult<TOOLS, never>> {
     const question = this.extractQuestion(options)
-    const globalPolicy = options.options?.globalPolicy ?? this.settings.globalPolicy
+    const globalPolicy =
+      options.options?.globalPolicy ?? this.settings.globalPolicy
     const budget = { ...this.settings.budget, ...options.options?.budget }
 
-    const finalAnswer = await runBATSLoop(question, {
-      ...this.settings,
-      budget,
-    }, globalPolicy)
+    const finalAnswer = await runBATSLoop(
+      question,
+      {
+        ...this.settings,
+        budget,
+      },
+      globalPolicy,
+    )
 
     // Return in GenerateTextResult format
     return {
@@ -1572,34 +1633,41 @@ export class BATSAgent<TOOLS extends BATSToolSet = BATSToolSet>
   }
 
   async stream(
-    options: AgentCallParameters<BATSCallOptions>
+    options: AgentCallParameters<BATSCallOptions>,
   ): Promise<StreamTextResult<TOOLS, never>> {
     // For streaming, we need to emit events during the BATS loop
     // This requires refactoring runBATSLoop to yield progress events
-    
+
     const question = this.extractQuestion(options)
-    const globalPolicy = options.options?.globalPolicy ?? this.settings.globalPolicy
+    const globalPolicy =
+      options.options?.globalPolicy ?? this.settings.globalPolicy
     const budget = { ...this.settings.budget, ...options.options?.budget }
 
     // Create an async generator that yields progress
-    const progressGenerator = runBATSLoopStreaming(question, {
-      ...this.settings,
-      budget,
-    }, globalPolicy)
+    const progressGenerator = runBATSLoopStreaming(
+      question,
+      {
+        ...this.settings,
+        budget,
+      },
+      globalPolicy,
+    )
 
     // Wrap in StreamTextResult format
     return createStreamTextResult(progressGenerator)
   }
 
-  private extractQuestion(options: AgentCallParameters<BATSCallOptions>): string {
+  private extractQuestion(
+    options: AgentCallParameters<BATSCallOptions>,
+  ): string {
     if (options.prompt) {
       return typeof options.prompt === "string"
         ? options.prompt
-        : options.prompt.map(m => m.content).join("\n")
+        : options.prompt.map((m) => m.content).join("\n")
     }
     if (options.messages) {
       const lastUserMessage = options.messages
-        .filter(m => m.role === "user")
+        .filter((m) => m.role === "user")
         .pop()
       return typeof lastUserMessage?.content === "string"
         ? lastUserMessage.content
@@ -1637,16 +1705,20 @@ export type BATSProgressEvent =
 async function* runBATSLoopStreaming(
   question: string,
   settings: BATSAgentSettings,
-  globalPolicy: GlobalPolicy
+  globalPolicy: GlobalPolicy,
 ): AsyncGenerator<BATSProgressEvent> {
   // Similar to runBATSLoop but yields events at each step
-  
+
   const budgetTracker = new BudgetTracker(settings.budget)
   // ... setup ...
 
   while (budgetTracker.hasRemaining()) {
     attemptNumber++
-    yield { type: "attempt_start", attemptNumber, budget: budgetTracker.getSnapshot() }
+    yield {
+      type: "attempt_start",
+      attemptNumber,
+      budget: budgetTracker.getSnapshot(),
+    }
 
     // Use streamText instead of generateText for streaming within attempts.
     // IMPORTANT: Tool-output eviction invariant still applies (Section 7.4):
@@ -1664,17 +1736,25 @@ async function* runBATSLoopStreaming(
         yield { type: "thinking", content: chunk.textDelta }
       }
       if (chunk.type === "tool-call") {
-        yield { type: "tool_call", toolName: chunk.toolName as ToolName, input: chunk.args }
+        yield {
+          type: "tool_call",
+          toolName: chunk.toolName as ToolName,
+          input: chunk.args,
+        }
       }
       if (chunk.type === "tool-result") {
-        yield { type: "tool_result", toolName: chunk.toolName as ToolName, output: chunk.result }
+        yield {
+          type: "tool_result",
+          toolName: chunk.toolName as ToolName,
+          output: chunk.result,
+        }
         // Internal state update (evicted tool context):
         // state.latestToolResult = { toolName: chunk.toolName as ToolName, output: chunk.result, at: Date.now() }
       }
     }
 
     // ... verification and attempt logic with yields ...
-    
+
     yield { type: "budget_update", budget: budgetTracker.getSnapshot() }
   }
 
@@ -1785,7 +1865,7 @@ Return as JSON:
 async function selectBestAnswer(
   judgeModel: LanguageModel,
   candidates: Array<{ answer: string; verification: VerificationResult }>,
-  question: string
+  question: string,
 ): Promise<string> {
   if (candidates.length === 1) {
     return candidates[0].answer
@@ -1811,7 +1891,10 @@ Select the single best answer (most likely factually correct and most specific t
 Do NOT perform majority vote. Do NOT select based on writing quality.`,
   })
 
-  const idx = Math.max(0, Math.min(candidates.length - 1, Math.floor(object.selectedIndex)))
+  const idx = Math.max(
+    0,
+    Math.min(candidates.length - 1, Math.floor(object.selectedIndex)),
+  )
   return candidates[idx].answer
 }
 ```
@@ -1822,7 +1905,10 @@ Do NOT perform majority vote. Do NOT select based on writing quality.`,
 
 ```ts
 export class BATSError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
     super(message)
     this.name = "BATSError"
   }
@@ -1832,7 +1918,7 @@ export class BudgetExhaustedError extends BATSError {
   constructor(tool: ToolName, requested: number, available: number) {
     super(
       `Budget exhausted for ${tool}: requested ${requested}, available ${available}`,
-      "BUDGET_EXHAUSTED"
+      "BUDGET_EXHAUSTED",
     )
   }
 }
@@ -1841,7 +1927,7 @@ export class NoVerifiedAnswerError extends BATSError {
   constructor(attempts: number) {
     super(
       `No verified answer found after ${attempts} attempts`,
-      "NO_VERIFIED_ANSWER"
+      "NO_VERIFIED_ANSWER",
     )
   }
 }
@@ -1864,7 +1950,7 @@ import { anthropic } from "@ai-sdk/anthropic"
 const agent = new BATSAgent({
   id: "research-agent",
   model: anthropic("claude-sonnet-4-20250514"),
-  
+
   tools: {
     search: createSearchTool({
       apiKey: process.env.GOOGLE_API_KEY!,
@@ -1875,16 +1961,16 @@ const agent = new BATSAgent({
       contentLimit: 150000,
     }),
   },
-  
+
   budget: {
     search: 50,
     browse: 50,
   },
-  
+
   globalPolicy: "early-stop",
   temperature: 0.7,
   summarizationInterval: 10,
-  
+
   onAttemptStart: (n, budget) => {
     console.log(`Starting attempt ${n}, budget:`, budget)
   },
@@ -1895,7 +1981,8 @@ const agent = new BATSAgent({
 
 // Non-streaming usage
 const result = await agent.generate({
-  prompt: "What is the full name of the person who invented the first programmable computer?",
+  prompt:
+    "What is the full name of the person who invented the first programmable computer?",
 })
 console.log(result.text)
 
@@ -1936,27 +2023,32 @@ bats/
 ## 17. Implementation Phases
 
 ### Phase 1: Core Infrastructure
+
 1. Type definitions
 2. BudgetTracker
 3. Planner
 4. Error classes
 
 ### Phase 2: Tools
+
 1. Search tool (Google Custom Search)
 2. Browse tool (Jina.ai)
 3. Browse tool (Crawl4AI)
 
 ### Phase 3: Verification
+
 1. Verifier class
 2. Constraint analysis
 3. Trajectory summarization
 
 ### Phase 4: Orchestration
+
 1. Single attempt loop
 2. Multi-attempt loop
 3. Answer selection
 
 ### Phase 5: Agent Interface
+
 1. BATSAgent.generate()
 2. BATSAgent.stream()
 3. Progress events

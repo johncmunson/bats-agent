@@ -2,13 +2,13 @@
 
 ```ts
 type Budget = {
-    searchBudget: {
-        used: number
-        remaining: number
-    }
-    browseBudget: {
-        used: number
-        remaining: number
-    }
+  searchBudget: {
+    used: number
+    remaining: number
+  }
+  browseBudget: {
+    used: number
+    remaining: number
+  }
 }
 ```

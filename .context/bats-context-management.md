@@ -15,42 +15,41 @@ They should not be conflated.
 
 ### What is truncated
 
-* **Raw webpage content** returned by browse tools
-* Not search results (which are already short)
+- **Raw webpage content** returned by browse tools
+- Not search results (which are already short)
 
 ### When truncation happens
 
-* **Immediately after fetching a webpage**
-* **Before** content is passed into the LLM context
+- **Immediately after fetching a webpage**
+- **Before** content is passed into the LLM context
 
 ### How truncation works
 
-* Hard character cap (paper: **150,000 characters per page**)
-* Simple cutoff (e.g., first N characters)
-* No semantic reasoning involved
+- Hard character cap (paper: **150,000 characters per page**)
+- Simple cutoff (e.g., first N characters)
+- No semantic reasoning involved
 
 ### Who performs truncation
 
-* **Tool adapter / orchestration layer**
-* Not the Planner
-* Not the Verifier
-* Not the LLM
+- **Tool adapter / orchestration layer**
+- Not the Planner
+- Not the Verifier
+- Not the LLM
 
 ### Why truncation exists
 
-* Prevent worst-case context explosion from long webpages
-* Bound token cost deterministically
-* Ensure tool calls have predictable overhead
+- Prevent worst-case context explosion from long webpages
+- Bound token cost deterministically
+- Ensure tool calls have predictable overhead
 
 ### Important invariants
 
-* Truncation is **not summarization**
-* No attempt is made to preserve “important” parts
-* Information may be lost irreversibly
-* This is acceptable because:
-
-  * Webpages are external evidence, not internal state
-  * Higher-level reasoning happens later
+- Truncation is **not summarization**
+- No attempt is made to preserve “important” parts
+- Information may be lost irreversibly
+- This is acceptable because:
+  - Webpages are external evidence, not internal state
+  - Higher-level reasoning happens later
 
 ### Engineer takeaway
 
@@ -62,14 +61,13 @@ They should not be conflated.
 
 ### What is summarized
 
-* **Entire reasoning trajectory of an attempt**, including:
+- **Entire reasoning trajectory of an attempt**, including:
+  - internal reasoning
+  - tool calls and observations
+  - intermediate hypotheses
+  - partial plans and failures
 
-  * internal reasoning
-  * tool calls and observations
-  * intermediate hypotheses
-  * partial plans and failures
-
-This is *agent state*, not raw evidence.
+This is _agent state_, not raw evidence.
 
 ---
 
@@ -78,51 +76,47 @@ This is *agent state*, not raw evidence.
 Trajectory summarization is triggered in **three cases**:
 
 1. **Verification returns `CONTINUE`**
-
-   * Attempt is promising but incomplete
-   * Budget remains
-   * Same attempt will continue
+   - Attempt is promising but incomplete
+   - Budget remains
+   - Same attempt will continue
 
 2. **Verification returns `PIVOT`**
-
-   * Attempt is terminated as unproductive
-   * A new attempt will start
-   * Lessons must be preserved
+   - Attempt is terminated as unproductive
+   - A new attempt will start
+   - Lessons must be preserved
 
 3. **Periodic safeguard**
-
-   * After a fixed number of iterations (paper: **K = 10**)
-   * Prevents uncontrolled context growth
+   - After a fixed number of iterations (paper: **K = 10**)
+   - Prevents uncontrolled context growth
 
 ---
 
 ### Who performs summarization
 
-* **The Verifier, and only the Verifier**
+- **The Verifier, and only the Verifier**
 
 This is deliberate:
 
-* Verifier has access to:
+- Verifier has access to:
+  - original constraints
+  - success/failure judgment
+  - global reasoning validity
 
-  * original constraints
-  * success/failure judgment
-  * global reasoning validity
-* Planner does not summarize
-* Orchestrator only applies the result
+- Planner does not summarize
+- Orchestrator only applies the result
 
 ---
 
 ### How summarization works
 
-* Verifier replaces the *entire raw trajectory* with a **structured summary**
-* Summary includes:
-
-  * goal of the attempt
-  * strategy used
-  * key findings (positive and negative)
-  * failure analysis (if any)
-  * reusable facts
-  * explicit recommendations for next steps
+- Verifier replaces the _entire raw trajectory_ with a **structured summary**
+- Summary includes:
+  - goal of the attempt
+  - strategy used
+  - key findings (positive and negative)
+  - failure analysis (if any)
+  - reusable facts
+  - explicit recommendations for next steps
 
 This is a **destructive replacement**, not an append.
 
@@ -132,11 +126,11 @@ This is a **destructive replacement**, not an append.
 
 Trajectory summarization enables:
 
-* **Bounded-memory reasoning**
-* **Cross-attempt learning without training**
-* **Avoidance of repeated dead ends**
-* **Safe continuation after partial success**
-* **Budget efficiency**
+- **Bounded-memory reasoning**
+- **Cross-attempt learning without training**
+- **Avoidance of repeated dead ends**
+- **Safe continuation after partial success**
+- **Budget efficiency**
 
 It is not just for token savings; it is a **control-flow primitive**.
 
@@ -144,13 +138,13 @@ It is not just for token savings; it is a **control-flow primitive**.
 
 ### Critical invariants
 
-* At any time, the system holds:
-
-  * either a full trajectory
-  * or a summary
+- At any time, the system holds:
+  - either a full trajectory
+  - or a summary
     **Never both**
-* Summarization never happens mid-reasoning without verifier involvement
-* Summaries may reference facts learned from webpages, but do **not** replace webpage truncation
+
+- Summarization never happens mid-reasoning without verifier involvement
+- Summaries may reference facts learned from webpages, but do **not** replace webpage truncation
 
 ### Engineer takeaway
 
