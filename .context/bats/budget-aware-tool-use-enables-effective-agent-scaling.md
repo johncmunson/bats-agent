@@ -595,7 +595,8 @@ Repeat <think><tool_code> until you have the final answer. <answer>Final solutio
 
 - Only wirte the final answer inside <answer> and </answer>.
 - If you cannot find the answer, write <answer>None</answer>.
-  </prompt>
+
+</prompt>
 
 ### C.2. BATS Planning Module
 
@@ -619,7 +620,8 @@ Maintain a tree-structured checklist of actionable steps (each may require sever
 - Keep all executed steps, never delete them, retain history to avoid repeats.
 - Update dynamically as you reason and gather info, adding or revising steps as needed.
 - Always consider current and remaining budget when updating the plan.
-  </prompt>
+
+</prompt>
 
 ### C.3. BATS Self-Verification Module
 
