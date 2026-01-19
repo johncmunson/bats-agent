@@ -61,37 +61,37 @@ function bats_agent(
       remaining: budget.browse,
     },
   }
-  const verified_answers: VerifiedAnswer[] = []
+  const verifiedAnswers: VerifiedAnswer[] = []
 
   // Macro-Attempt Loop
-  while (mode === "early_abort" ? verified_answers.length === 0 : true) {
+  while (mode === "early_abort" ? verifiedAnswers.length === 0 : true) {
     // Micro-Attempt State
     let decision: Decision | null = null
-    let microAttemptNumber: number = 0
-    let microAttemptIteration: number = 0
-    const verification_outputs: Record<
+    let microAttemptIteration: number = 1
+    let microAttemptNumber: number = 1
+    const verificationOutputs: Record<
       `attempt_${number}`,
       VerificationOutput[]
     > = {}
 
     // Micro-Attempt Loop
     while (decision !== "SUCCESS") {
-      // Adjust outer-loop state
-      microAttemptIteration++
-      if (decision === "PIVOT") microAttemptNumber++
-
       // ReAct State
-      let proposed_answer: string | null = null
+      let proposedAnswer: string | null = null
 
       // ReAct Loop
-      while (!proposed_answer) {
+      while (!proposedAnswer) {
         think()
         plan()
-        if (budgetIsExhausted(ledger)) go_to_select_answer()
-        use_tools()
+        if (budgetIsExhausted(ledger)) goToSelectAnswer()
+        useTools()
       }
-      const verification_output = runSelfVerification()
+      const verificationOutput = runSelfVerification({ question, trajectory, proposedAnswer, ledger})
+      const key = `attempt_${microAttemptNumber}` as const;
+      (verificationOutputs[key] ||= []).push(verificationOutput);
+      microAttemptIteration++
+      if (decision === "PIVOT") microAttemptNumber++
     }
   }
-  select_answer()
+  selectAnswer()
 }

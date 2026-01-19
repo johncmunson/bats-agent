@@ -81,7 +81,7 @@ const selfVerificationSchema = z.object({
 
 type SelfVerificationOutput = z.infer<typeof selfVerificationSchema>
 
-export async function runStrategicVerification({
+export async function runSelfVerification({
   question,
   trajectory,
   currentAnswer,

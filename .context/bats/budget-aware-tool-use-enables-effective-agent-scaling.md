@@ -593,7 +593,7 @@ Repeat <think><tool_code> until you have the final answer. <answer>Final solutio
 
 ## About Answers
 
-- Only wirte the final answer inside <answer> and </answer>.
+- Only write the final answer inside <answer> and </answer>.
 - If you cannot find the answer, write <answer>None</answer>.
 
 </prompt>

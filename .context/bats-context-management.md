@@ -73,19 +73,12 @@ This is _agent state_, not raw evidence.
 
 ### When summarization happens
 
-Trajectory summarization is triggered in **three cases**:
+Trajectory summarization is triggered in **two cases**:
 
-1. **Verification returns `CONTINUE`**
-   - Attempt is promising but incomplete
-   - Budget remains
-   - Same attempt will continue
-
-2. **Verification returns `PIVOT`**
-   - Attempt is terminated as unproductive
-   - A new attempt will start
-   - Lessons must be preserved
-
-3. **Periodic safeguard**
+1. **Verification runs**
+   - > When the decision is to CONTINUE or PIVOT, the module also generates a concise summary that replaces the raw trajectory in context.
+   - Also though, need to produce a summary when SUCCESS because of budget-exhaustive mode
+2. **Periodic safeguard**
    - After a fixed number of iterations (paper: **K = 10**)
    - Prevents uncontrolled context growth
 
