@@ -1,18 +1,8 @@
-# Self-Verification Module
-
-```ts
 import { generateText, Output } from "ai"
 import { z } from "zod"
+import type { VerificationInput, VerificationOutput } from "./types"
 
-// TODO: Update budgetStatus and trajectory to be more structured.
-type StrategicVerificationInput = {
-  question: string
-  trajectory: string
-  currentAnswer: string
-  budgetStatus: string
-}
-
-const strategicVerificationSchema = z.object({
+const verificationSchema = z.object({
   verification: z
     .array(
       z.object({
@@ -25,13 +15,13 @@ const strategicVerificationSchema = z.object({
         assessment: z
           .enum(["SATISFIED", "CONTRADICTED", "UNVERIFIABLE"])
           .describe(
-            "Whether the Current Answer satisfies, contradicts, or cannot be verified against this constraint.",
+            "Whether the Proposed Answer satisfies, contradicts, or cannot be verified against this constraint.",
           ),
 
         reasoning: z
           .string()
           .describe(
-            "Brief justification explaining why this constraint received the given assessment, referencing the Current Answer and/or Trajectory.",
+            "Brief justification explaining why this constraint received the given assessment, referencing the Proposed Answer and/or Trajectory.",
           ),
       }),
     )
@@ -81,21 +71,19 @@ const strategicVerificationSchema = z.object({
     ),
 })
 
-type StrategicVerificationOutput = z.infer<typeof strategicVerificationSchema>
-
-export async function runStrategicVerification({
+export async function runVerificationSubagent({
   question,
   trajectory,
-  currentAnswer,
-  budgetStatus,
-}: StrategicVerificationInput): Promise<StrategicVerificationOutput> {
+  proposedAnswer,
+  ledger,
+}: VerificationInput): Promise<VerificationOutput> {
   const prompt = `You are an AI Strategic Verifier. Your primary goal is to evaluate a proposed answer, assess the viability of the current problem-solving plan, and decide the best course of action: declare success, continue with the current plan, or pivot to a new one.
 
 ### Given Inputs
 
 - **Question**: The original user question. An answer is believed to exist.
 - **Trajectory**: The sequence of reasoning steps and tool calls taken so far in the current attempt.
-- **Current Answer**: The final answer produced by the current attempt.
+- **Proposed Answer**: The final answer produced by the current attempt.
 - **Budget Status**: Information on current tool call budget utilization and remaining budget, including search queries and browsing URLs.
 
 ### Your Task: A 3-Step Process
@@ -104,10 +92,10 @@ You must proceed in the following order:
 
 #### Step 1: Conduct Verification Analysis
 
-First, perform a strict verification of the \`Current Answer\`.
+First, perform a strict verification of the \`Proposed Answer\`.
 
 - Go through each constraint from the original \`Question\` one by one.
-- For each constraint, compare it against the \`Current Answer\` and the \`Trajectory\`.
+- For each constraint, compare it against the \`Proposed Answer\` and the \`Trajectory\`.
 - State your finding for each constraint: \`SATISFIED\`, \`CONTRADICTED\`, or \`UNVERIFIABLE\`.
 
 #### Step 2: Make a Strategic Decision
@@ -146,24 +134,23 @@ ${question}
 **Trajectory**
 ${trajectory}
 
-**Current Answer**
-${currentAnswer}
+**Proposed Answer**
+${proposedAnswer}
 
 **Budget Status**
-${budgetStatus}
+${ledger}
 `
 
   const { output } = await generateText({
     model: "openai/gpt-5.2",
     prompt,
     output: Output.object({
-      name: "StrategicVerificationResult",
+      name: "VerificationResult",
       description:
-        "Structured evaluation of an agent trajectory, including verification, strategic decision, and next-step guidance.",
-      schema: strategicVerificationSchema,
+        "Structured evaluation of an agent trajectory and proposed answer, including verification, strategic decision, and next-step guidance.",
+      schema: verificationSchema,
     }),
   })
 
   return output
 }
-```

@@ -1,94 +1,12 @@
-type Budget = {
-  search: number
-  browse: number
-}
-
-type Ledger = {
-  search: {
-    used: number
-    remaining: number
-  }
-  browse: {
-    used: number
-    remaining: number
-  }
-}
-
-type Mode = "early_abort" | "budget_exhaustive"
-
-type Decision = "SUCCESS" | "CONTINUE" | "PIVOT"
-
-type VerificationOutput = {
-  verification: {
-    constraint: string
-    assessment: "SATISFIED" | "CONTRADICTED" | "UNVERIFIABLE"
-    reasoning: string
-  }[]
-  decision: "SUCCESS" | "CONTINUE" | "PIVOT"
-  justification: string
-  trajectory_summary: string
-  details?: {
-    failure_analysis: string
-    useful_information: string
-    strategic_recommendations: string
-  }
-}
-
-type Evidence = Pick<VerificationOutput, "verification" | "justification">
-
-type VerifiedAnswer = {
-  answer: string
-  evidence: Evidence
-}
-
-/** Atomic resource counters (never derived automatically) */
-type ResourceUsage = {
-  query: number
-  url: number
-}
-
-type NodeId = string
-
-type NodeStatus = "pending" | "partial" | "done" | "failed"
-
-/**
- * A PlanNode records ONLY the cost incurred
- * while THIS node was the execution focus.
- *
- * It does NOT include children.
- */
-type PlanNode = {
-  id: NodeId
-  description: string
-  status: NodeStatus
-  /** Local, append-only usage for this node only */
-  usage: ResourceUsage
-  /**
-   * Human-readable evolving summary.
-   * May be appended to or replaced by a faithful summary,
-   * but must not falsify earlier conclusions.
-   */
-  notes?: string
-  /** Conditional refinements / branches */
-  children?: PlanNode[]
-}
-
-type Plan = {
-  /** Root nodes for this attempt */
-  roots: PlanNode[]
-  /**
-   * Execution focus.
-   * Changing this enables backtracking without mutation.
-   */
-  executionCursor: NodeId | null
-  /** Plan status */
-  status: "active" | "abandoned" | "succeeded"
-  /**
-   * Authoritative, monotonic total usage for this attempt.
-   * This is what the budget tracker and verifier rely on.
-   */
-  totalUsage: ResourceUsage
-}
+import { runVerificationSubagent } from "./verification-subagent"
+import type {
+  Budget,
+  Ledger,
+  Mode,
+  VerifiedAnswer,
+  Plan,
+  VerificationOutput,
+} from "./types"
 
 const budgetIsExhausted = (ledger: Ledger) => {
   return ledger.search.remaining === 0 || ledger.browse.remaining === 0
@@ -149,7 +67,7 @@ async function runBATSAgent(
         const updatedPlan = await plan()
         const toolOutputs = await useTools()
       }
-      const verificationOutput = await runSelfVerification({
+      const verificationOutput = await runVerificationSubagent({
         question,
         trajectory,
         proposedAnswer,
