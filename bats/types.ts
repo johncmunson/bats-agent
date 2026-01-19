@@ -85,6 +85,8 @@ export type PlanNode = {
    * Human-readable evolving summary.
    * May be appended to or replaced by a faithful summary,
    * but must not falsify earlier conclusions.
+   * TODO: This might be redundant and not necessary if we
+   * accumulating <think> blocks in the trajectory.
    */
   notes?: string
   /** Conditional refinements / branches */
