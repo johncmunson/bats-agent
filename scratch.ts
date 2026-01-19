@@ -98,6 +98,13 @@ function bats_agent(
       ;(verificationOutputs[key] ||= []).push(verificationOutput)
       microAttemptIteration++
       if (verificationOutput.decision === "PIVOT") microAttemptNumber++
+      if (verificationOutput.decision === "SUCCESS") verifiedAnswers.push({
+        answer: proposedAnswer,
+        evidence: {
+          verification: verificationOutput.verification,
+          justification: verificationOutput.justification,
+        },
+      })
     }
   }
   const answer = selectAnswer()
