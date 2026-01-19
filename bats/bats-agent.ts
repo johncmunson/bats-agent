@@ -45,7 +45,6 @@ async function runBATSAgent({
       },
     })
     // Micro-Attempt State (WIP)
-    let microAttemptIteration: number = 1
     let microAttemptNumber: number = 1
     const plans: Record<`attempt_${number}`, Plan> = {
       attempt_1: initializePlan(),
@@ -60,7 +59,7 @@ async function runBATSAgent({
       // ReAct State (WIP)
       let proposedAnswer: string | null = null
       let trajectory: string = "" // Might be a better type or schema for this...
-      let iterationsSinceLastCompaction: number = 0
+      let iterationsSinceLastCompaction: number = 1
 
       // ReAct Loop
       reActLoop: while (!proposedAnswer) {
@@ -76,6 +75,7 @@ async function runBATSAgent({
           trajectory = await summarizeTrajectory(verificationOutputs[`attempt_${microAttemptNumber}`], trajectory)
           iterationsSinceLastCompaction = 0
         }
+        iterationsSinceLastCompaction++
       }
       const verificationOutput = await runVerificationSubagent({
         question,
@@ -86,7 +86,6 @@ async function runBATSAgent({
       ;(verificationOutputs[`attempt_${microAttemptNumber}`] ||= []).push(
         verificationOutput,
       )
-      microAttemptIteration++
       if (verificationOutput.decision === "PIVOT") {
         plans[`attempt_${microAttemptNumber}`].status = "abandoned"
         microAttemptNumber++
