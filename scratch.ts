@@ -66,7 +66,6 @@ function bats_agent(
   // Macro-Attempt Loop
   while (mode === "early_abort" ? verifiedAnswers.length === 0 : true) {
     // Micro-Attempt State
-    let decision: Decision | null = null
     let microAttemptIteration: number = 1
     let microAttemptNumber: number = 1
     const verificationOutputs: Record<
@@ -75,7 +74,10 @@ function bats_agent(
     > = {}
 
     // Micro-Attempt Loop
-    while (decision !== "SUCCESS") {
+    while (
+      verificationOutputs[`attempt_${microAttemptNumber}`].at(-1)?.decision !==
+      "SUCCESS"
+    ) {
       // ReAct State
       let proposedAnswer: string | null = null
 
@@ -95,7 +97,7 @@ function bats_agent(
       const key = `attempt_${microAttemptNumber}` as const
       ;(verificationOutputs[key] ||= []).push(verificationOutput)
       microAttemptIteration++
-      if (decision === "PIVOT") microAttemptNumber++
+      if (verificationOutput.decision === "PIVOT") microAttemptNumber++
     }
   }
   selectAnswer()
