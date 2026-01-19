@@ -1,11 +1,25 @@
 import { generateText } from "ai"
-import type { VerificationOutput } from "./types"
+import type { VerificationOutput, TrajectoryEntry } from "./types"
 
-// TODO: Refine prompt and update `trajectory` to be more structured.
+/**
+ * Summarize the current trajectory to reduce context length.
+ * Accepts either a structured TrajectoryEntry[] or a raw string.
+ */
 export const summarizeTrajectory = async (
   verificationOutputs: VerificationOutput[],
-  trajectory: string,
-) => {
+  trajectory: TrajectoryEntry[] | string,
+): Promise<string> => {
+  // Format trajectory if it's structured
+  const trajectoryStr =
+    typeof trajectory === "string"
+      ? trajectory
+      : formatTrajectoryForSummary(trajectory)
+
+  const verificationSummaries = verificationOutputs
+    .map((vo) => vo.trajectory_summary)
+    .filter(Boolean)
+    .join("\n---\n")
+
   const prompt = `You are summarizing the CURRENT in-progress reasoning trajectory of a single attempt.
 
 Your task is to produce a concise, factual summary that REPLACES the older parts of the trajectory.
@@ -29,33 +43,68 @@ IMPORTANT RULES
 - Key intermediate findings that remain relevant
 - Explicit failure causes or dead ends (as negative knowledge)
 - Constraints that are satisfied, unsatisfied, or still open
+- URLs that were visited and their key findings
+- Search queries that were productive
 
 4. What to Remove
-- Raw chain-of-thought
-- Speculative hypotheses
-- Redundant tool outputs
+- Raw chain-of-thought that doesn't lead to conclusions
+- Speculative hypotheses that weren't validated
+- Redundant tool outputs (keep only key findings)
 - Reasoning paths that were abandoned or contradicted
+- Detailed tool response JSON (summarize the findings instead)
 
 5. Output Requirements
 - Be concise and information-dense
 - Use neutral, factual language
-- Do NOT reference “the trajectory” or “the verification”
+- Structure as: Key Facts → Open Questions → Dead Ends
+- Do NOT reference "the trajectory" or "the verification"
 - Do NOT include instructions or recommendations
 - Produce a standalone summary suitable for continuing reasoning
 
 INPUTS
 
 Trajectory (to be summarized):
-${trajectory}
+${trajectoryStr}
 
 Verification Outputs (for grounding only):
-${verificationOutputs.map((verificationOutput) => verificationOutput.trajectory_summary).join("\n")}
-`
+${verificationSummaries || "(none yet)"}
 
-  const { output } = await generateText({
-    model: "openai/gpt-5.2",
+OUTPUT
+
+Provide a concise summary of the trajectory:`
+
+  const { text } = await generateText({
+    model: "openai/gpt-5.2", // TODO: Use configurable model
     prompt,
+    temperature: 0,
   })
 
-  return output
+  return text
+}
+
+function formatTrajectoryForSummary(trajectory: TrajectoryEntry[]): string {
+  return trajectory
+    .map((entry) => {
+      const toolCallsStr =
+        entry.toolCalls.length > 0
+          ? entry.toolCalls
+              .map((tc) => {
+                if (tc.toolName === "search") {
+                  const input = tc.input as { query: string[] }
+                  return `  - Search: ${input.query.join(", ")}`
+                } else {
+                  const input = tc.input as { url: string[]; goal: string }
+                  return `  - Browse: ${input.url.join(", ")} (goal: ${input.goal})`
+                }
+              })
+              .join("\n")
+          : "  (no actions)"
+
+      return `--- Iteration ${entry.iteration} ---
+Thinking: ${entry.thinking}
+
+Actions:
+${toolCallsStr}`
+    })
+    .join("\n\n")
 }
