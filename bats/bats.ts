@@ -94,7 +94,7 @@ const budgetIsExhausted = (ledger: Ledger) => {
   return ledger.search.remaining === 0 || ledger.browse.remaining === 0
 }
 
-async function bats_agent(
+async function runBATSAgent(
   budget: Budget,
   question: string,
   mode: Mode = "early_abort",
