@@ -86,9 +86,14 @@ function bats_agent(
         if (budgetIsExhausted(ledger)) goToSelectAnswer()
         useTools()
       }
-      const verificationOutput = runSelfVerification({ question, trajectory, proposedAnswer, ledger})
-      const key = `attempt_${microAttemptNumber}` as const;
-      (verificationOutputs[key] ||= []).push(verificationOutput);
+      const verificationOutput = runSelfVerification({
+        question,
+        trajectory,
+        proposedAnswer,
+        ledger,
+      })
+      const key = `attempt_${microAttemptNumber}` as const
+      ;(verificationOutputs[key] ||= []).push(verificationOutput)
       microAttemptIteration++
       if (decision === "PIVOT") microAttemptNumber++
     }
