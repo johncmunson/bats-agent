@@ -1,13 +1,13 @@
 import { generateText, Output } from "ai"
 import { z } from "zod"
-import { type BudgetStatus } from "./types"
+import { type Ledger } from "./types"
 
 // TODO: Update trajectory to be more structured.
 type SelfVerificationInput = {
   question: string
   trajectory: string
   currentAnswer: string
-  budgetStatus: BudgetStatus
+  ledger: Ledger
 }
 
 const selfVerificationSchema = z.object({
@@ -85,7 +85,7 @@ export async function runSelfVerification({
   question,
   trajectory,
   currentAnswer,
-  budgetStatus,
+  ledger,
 }: SelfVerificationInput): Promise<SelfVerificationOutput> {
   const prompt = `You are an AI Strategic Verifier. Your primary goal is to evaluate a proposed answer, assess the viability of the current problem-solving plan, and decide the best course of action: declare success, continue with the current plan, or pivot to a new one.
 
@@ -148,7 +148,7 @@ ${trajectory}
 ${currentAnswer}
 
 **Budget Status**
-${budgetStatus}
+${ledger}
 `
 
   const { output } = await generateText({

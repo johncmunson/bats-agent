@@ -1,4 +1,4 @@
-export type BudgetStatus = {
+export type Ledger = {
   query: {
     used: number
     remaining: number
