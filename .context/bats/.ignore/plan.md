@@ -25,7 +25,7 @@ The ReAct subagent is called from within the micro-attempt loop and runs until e
 
 ### Input
 
-```typescript
+```ts
 type ReActSubagentInput = {
   // Core
   question: string
@@ -54,7 +54,7 @@ type ReActSubagentInput = {
 
 ### Output
 
-```typescript
+```ts
 type ReActSubagentOutput = {
   proposedAnswer: string | null // null if budget exhausted before answer
   trajectory: TrajectoryEntry[] // Full reasoning trace for verification
@@ -70,7 +70,7 @@ type ReActSubagentOutput = {
 
 The trajectory is a structured array. Each entry captures one iteration's reasoning and actions:
 
-```typescript
+```ts
 type TrajectoryEntry = {
   iteration: number
   thinking: string // LLM's reasoning/analysis
@@ -91,7 +91,7 @@ type TrajectoryEntry = {
 
 Use a simple, LLM-friendly delta format. Each delta is an atomic operation:
 
-```typescript
+```ts
 type PlanDelta =
   | { op: "addNode"; parentId: NodeId | null; node: Omit<PlanNode, "children"> }
   | { op: "updateStatus"; nodeId: NodeId; status: NodeStatus }
@@ -115,7 +115,7 @@ Tools must conform to the paper's interface (Section C.1) while being AI SDK com
 
 ### Search Tool
 
-```typescript
+```ts
 const searchTool = tool({
   description:
     "Performs batched web searches. Each query string in the array consumes 1 unit of Query Budget.",
@@ -131,7 +131,7 @@ const searchTool = tool({
 
 ### Browse Tool
 
-```typescript
+```ts
 const browseTool = tool({
   description:
     "Visit webpage(s) and return content. Each URL consumes 1 unit of URL Budget. Content is truncated to 150k characters.",
@@ -156,7 +156,7 @@ Each iteration follows this sequence:
 
 ### 1. Budget Pre-check
 
-```typescript
+```ts
 if (budgetIsExhausted(ledger)) {
   return { proposedAnswer: null, trajectory, budgetExhausted: true }
 }
@@ -214,7 +214,7 @@ After the LLM responds:
 
 ### 5. Periodic Compaction
 
-```typescript
+```ts
 if (iterationsSinceLastCompaction >= K) {
   trajectory = await summarizeTrajectory(verificationOutputs, trajectory)
   iterationsSinceLastCompaction = 0
@@ -227,7 +227,7 @@ if (iterationsSinceLastCompaction >= K) {
 
 Use structured output with the AI SDK's `Output.object()`:
 
-```typescript
+```ts
 const reActOutputSchema = z.object({
   thinking: z
     .string()
@@ -252,7 +252,7 @@ const reActOutputSchema = z.object({
 
 **Alternative**: Use a `submitAnswer` tool instead of the discriminated union. This may be more natural for the AI SDK's tool-calling flow:
 
-```typescript
+```ts
 const submitAnswerTool = tool({
   description:
     "Submit a proposed answer when you have gathered sufficient evidence",
@@ -312,7 +312,7 @@ If you have sufficient evidence, use the submitAnswer tool.
 
 The ReAct subagent integrates into the existing structure:
 
-```typescript
+```ts
 // Inside microAttemptLoop, replace the reActLoop pseudocode:
 
 const { proposedAnswer, trajectory, budgetExhausted } = await runReActSubagent({
