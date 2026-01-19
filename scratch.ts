@@ -64,7 +64,9 @@ function bats_agent(
   const verifiedAnswers: VerifiedAnswer[] = []
 
   // Macro-Attempt Loop
-  while (mode === "early_abort" ? verifiedAnswers.length === 0 : true) {
+  macroAttemptLoop: while (
+    mode === "early_abort" ? verifiedAnswers.length === 0 : true
+  ) {
     // Micro-Attempt State
     let microAttemptIteration: number = 1
     let microAttemptNumber: number = 1
@@ -74,18 +76,15 @@ function bats_agent(
     > = {}
 
     // Micro-Attempt Loop
-    while (
-      verificationOutputs[`attempt_${microAttemptNumber}`].at(-1)?.decision !==
-      "SUCCESS"
-    ) {
+    microAttemptLoop: while (true) {
       // ReAct State
       let proposedAnswer: string | null = null
 
       // ReAct Loop
-      while (!proposedAnswer) {
+      reActLoop: while (!proposedAnswer) {
+        if (budgetIsExhausted(ledger)) break macroAttemptLoop
         think()
         plan()
-        if (budgetIsExhausted(ledger)) goToSelectAnswer()
         useTools()
       }
       const verificationOutput = runSelfVerification({
@@ -94,17 +93,21 @@ function bats_agent(
         proposedAnswer,
         ledger,
       })
-      const key = `attempt_${microAttemptNumber}` as const
-      ;(verificationOutputs[key] ||= []).push(verificationOutput)
+      ;(verificationOutputs[`attempt_${microAttemptNumber}`] ||= []).push(
+        verificationOutput,
+      )
       microAttemptIteration++
       if (verificationOutput.decision === "PIVOT") microAttemptNumber++
-      if (verificationOutput.decision === "SUCCESS") verifiedAnswers.push({
-        answer: proposedAnswer,
-        evidence: {
-          verification: verificationOutput.verification,
-          justification: verificationOutput.justification,
-        },
-      })
+      if (verificationOutput.decision === "SUCCESS") {
+        verifiedAnswers.push({
+          answer: proposedAnswer,
+          evidence: {
+            verification: verificationOutput.verification,
+            justification: verificationOutput.justification,
+          },
+        })
+        break microAttemptLoop
+      }
     }
   }
   const answer = selectAnswer()
