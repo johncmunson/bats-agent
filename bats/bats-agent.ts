@@ -1,8 +1,6 @@
 import { runVerificationSubagent } from "./verification-subagent"
 import type {
-  Budget,
   Ledger,
-  Mode,
   Plan,
   VerifiedAnswer,
   VerificationOutput,
@@ -68,6 +66,7 @@ async function runBATSAgent({
       reActLoop: while (!proposedAnswer) {
         iterationsSinceLastCompaction++
         if (budgetIsExhausted(ledger)) break macroAttemptLoop
+
         // Psuedocode...
         const thought = await think()
         const updatedPlan = await plan()
