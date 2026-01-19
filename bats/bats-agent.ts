@@ -3,20 +3,23 @@ import type {
   Budget,
   Ledger,
   Mode,
-  VerifiedAnswer,
   Plan,
+  VerifiedAnswer,
   VerificationOutput,
+  BatsAgentInput
 } from "./types"
+import { summarizeTrajectory } from "./summarize-trajectory"
 
 const budgetIsExhausted = (ledger: Ledger) => {
   return ledger.search.remaining === 0 || ledger.browse.remaining === 0
 }
 
-async function runBATSAgent(
-  budget: Budget,
-  question: string,
-  mode: Mode = "early_abort",
-) {
+async function runBATSAgent({
+  budget,
+  question,
+  mode = "early_abort",
+  K = 10,
+}: BatsAgentInput) {
   // Global/Macro-Attempt State
   const ledger: Ledger = {
     search: {
@@ -58,14 +61,22 @@ async function runBATSAgent(
     microAttemptLoop: while (true) {
       // ReAct State (WIP)
       let proposedAnswer: string | null = null
+      let trajectory: string = "" // Might be a better type or schema for this...
+      let iterationsSinceLastCompaction: number = 0
 
       // ReAct Loop
       reActLoop: while (!proposedAnswer) {
+        iterationsSinceLastCompaction++
         if (budgetIsExhausted(ledger)) break macroAttemptLoop
         // Psuedocode...
         const thought = await think()
         const updatedPlan = await plan()
         const toolOutputs = await useTools()
+
+        if (iterationsSinceLastCompaction >= K) {
+          trajectory = await summarizeTrajectory(verificationOutputs[`attempt_${microAttemptNumber}`], trajectory)
+          iterationsSinceLastCompaction = 0
+        }
       }
       const verificationOutput = await runVerificationSubagent({
         question,

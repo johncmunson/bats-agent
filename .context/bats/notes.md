@@ -1,3 +1,5 @@
+### Random notes for later...
+
 - Figure out the ReAct loop
 - The browse tool should truncate webpage results to 150k characters
 - Section 4.2 (CONTINUE/PIVOT summary) appears to be in conflict with section A.2 (K = 10 summary)

@@ -16,6 +16,13 @@ export type Ledger = {
 
 export type Mode = "early_abort" | "budget_exhaustive"
 
+export type BatsAgentInput = {
+  question: string
+  budget: Budget
+  mode: Mode
+  K?: number
+}
+
 export type Decision = "SUCCESS" | "CONTINUE" | "PIVOT"
 
 // TODO: Update trajectory to be more structured.
