@@ -20,7 +20,18 @@ const result = await generateText({
 
 ## Import
 
-<Snippet text={`import { stepCountIs } from "ai"`} prompt={false} />
+```ts
+import { generateText, stepCountIs } from "ai"
+
+const result = await generateText({
+  model: "openai/gpt-5.2-chat",
+  tools: {
+    // your tools
+  },
+  // Stop after 5 steps
+  stopWhen: stepCountIs(5),
+})
+```
 
 ## API Signature
 

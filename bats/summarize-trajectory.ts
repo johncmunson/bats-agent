@@ -2,7 +2,10 @@ import { generateText } from "ai"
 import type { VerificationOutput } from "./types"
 
 // TODO: Refine prompt and update `trajectory` to be more structured.
-export const summarizeTrajectory = async (verificationOutputs: VerificationOutput[], trajectory: string) => {
+export const summarizeTrajectory = async (
+  verificationOutputs: VerificationOutput[],
+  trajectory: string,
+) => {
   const prompt = `You are summarizing the CURRENT in-progress reasoning trajectory of a single attempt.
 
 Your task is to produce a concise, factual summary that REPLACES the older parts of the trajectory.

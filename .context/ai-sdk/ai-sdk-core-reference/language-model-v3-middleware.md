@@ -12,10 +12,9 @@ See [Language Model Middleware](/docs/ai-sdk-core/middleware) for more informati
 
 ## Import
 
-<Snippet
-text={`import { LanguageModelV3Middleware } from "ai"`}
-prompt={false}
-/>
+```ts
+import { LanguageModelV3Middleware } from "ai"
+```
 
 ## API Signature
 

@@ -4,7 +4,7 @@ import type {
   Plan,
   VerifiedAnswer,
   VerificationOutput,
-  BatsAgentInput
+  BatsAgentInput,
 } from "./types"
 import { summarizeTrajectory } from "./summarize-trajectory"
 
@@ -72,7 +72,10 @@ async function runBATSAgent({
         const toolOutputs = await useTools()
 
         if (iterationsSinceLastCompaction >= K) {
-          trajectory = await summarizeTrajectory(verificationOutputs[`attempt_${microAttemptNumber}`], trajectory)
+          trajectory = await summarizeTrajectory(
+            verificationOutputs[`attempt_${microAttemptNumber}`],
+            trajectory,
+          )
           iterationsSinceLastCompaction = 0
         }
         iterationsSinceLastCompaction++
