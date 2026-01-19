@@ -100,5 +100,6 @@ function bats_agent(
       if (verificationOutput.decision === "PIVOT") microAttemptNumber++
     }
   }
-  selectAnswer()
+  const answer = selectAnswer()
+  return answer
 }
