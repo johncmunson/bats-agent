@@ -43,7 +43,7 @@ async function runBATSAgent(
         url: 0,
       },
     })
-    // Micro-Attempt State
+    // Micro-Attempt State (WIP)
     let microAttemptIteration: number = 1
     let microAttemptNumber: number = 1
     const plans: Record<`attempt_${number}`, Plan> = {
@@ -56,7 +56,7 @@ async function runBATSAgent(
 
     // Micro-Attempt Loop
     microAttemptLoop: while (true) {
-      // ReAct State
+      // ReAct State (WIP)
       let proposedAnswer: string | null = null
 
       // ReAct Loop
