@@ -109,3 +109,67 @@ export type Plan = {
    */
   totalUsage: ResourceUsage
 }
+
+// ============================================================================
+// Plan Delta Types
+// ============================================================================
+
+export type PlanDelta =
+  | { op: "addNode"; parentId: NodeId | null; node: Omit<PlanNode, "children"> }
+  | { op: "updateStatus"; nodeId: NodeId; status: NodeStatus }
+  | { op: "appendNotes"; nodeId: NodeId; notes: string }
+  | { op: "setCursor"; nodeId: NodeId | null }
+
+// ============================================================================
+// Trajectory Types
+// ============================================================================
+
+export type SearchInput = {
+  query: string[]
+}
+
+export type BrowseInput = {
+  url: string[]
+  goal: string
+}
+
+export type ToolCall = {
+  toolName: "search" | "browse"
+  input: SearchInput | BrowseInput
+}
+
+export type TrajectoryEntry = {
+  iteration: number
+  thinking: string
+  toolCalls: ToolCall[]
+}
+
+// ============================================================================
+// ReAct Subagent Types
+// ============================================================================
+
+export type MostRecentVerification = {
+  decision: Decision
+  guidance: string // details.failure_analysis + details.useful_information
+  recommendations: string // details.strategic_recommendations
+}
+
+export type ReActSubagentInput = {
+  // Core
+  question: string
+  ledger: Ledger
+  plan: Plan
+
+  // Verification context
+  allTrajectorySummaries: string[]
+  mostRecentVerification: MostRecentVerification | null
+
+  // Configuration
+  K: number
+}
+
+export type ReActSubagentOutput = {
+  proposedAnswer: string | null
+  trajectory: TrajectoryEntry[]
+  budgetExhausted: boolean
+}
