@@ -5,6 +5,7 @@
 - Section 4.2 (CONTINUE/PIVOT summary) appears to be in conflict with section A.2 (K = 10 summary)
 - Use a temperature of 0.7 during agent execution to encourage exploration
 - Use a temperature of 0.0 for final answer selection and evaluation
+- ensure that we're utilizing an efficient prompt caching strategy
 
 ---
 
